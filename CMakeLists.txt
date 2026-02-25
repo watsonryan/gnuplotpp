@@ -68,6 +68,9 @@ if(BUILD_EXAMPLES)
 
   add_executable(monte_carlo_alpha_example examples/monte_carlo_alpha_example.cpp)
   target_link_libraries(monte_carlo_alpha_example PRIVATE gnuplotpp::gnuplotpp)
+
+  add_executable(feature_rich_showcase examples/feature_rich_showcase.cpp)
+  target_link_libraries(feature_rich_showcase PRIVATE gnuplotpp::gnuplotpp)
 endif()
 
 if(BUILD_TESTING)
