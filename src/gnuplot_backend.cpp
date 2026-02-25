@@ -1,5 +1,6 @@
 #include "gnuplotpp/gnuplot_backend.hpp"
 
+#include <algorithm>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -22,6 +23,19 @@ namespace {
 
 std::string quote(const std::filesystem::path& p) {
   return "'" + p.string() + "'";
+}
+
+std::string esc(const std::string& s) {
+  std::string out;
+  out.reserve(s.size());
+  for (char c : s) {
+    if (c == '\'') {
+      out += "''";
+    } else {
+      out += c;
+    }
+  }
+  return out;
 }
 
 std::string msg_io(const std::string& prefix,
@@ -77,23 +91,27 @@ std::string extension_for(OutputFormat format) {
 std::string terminal_for(OutputFormat format, const FigureSpec& spec) {
   std::ostringstream os;
   os << std::fixed << std::setprecision(3);
+  const double lw = std::max(1.0, spec.style.line_width_pt * 1.6);
   switch (format) {
     case OutputFormat::Pdf:
       os << "set terminal pdfcairo size " << spec.size.w << "in," << spec.size.h
-         << "in font '" << spec.style.font << "," << spec.style.font_pt << "'";
+         << "in enhanced color font '" << spec.style.font << "," << spec.style.font_pt
+         << "' linewidth " << lw << " rounded";
       return os.str();
     case OutputFormat::Svg:
       os << "set terminal svg size " << (spec.size.w * 96.0) << "," << (spec.size.h * 96.0)
-         << " font '" << spec.style.font << "," << spec.style.font_pt << "' dynamic";
+         << " enhanced font '" << spec.style.font << "," << spec.style.font_pt
+         << "' linewidth " << lw << " dynamic";
       return os.str();
     case OutputFormat::Eps:
       os << "set terminal epscairo size " << spec.size.w << "in," << spec.size.h
-         << "in font '" << spec.style.font << "," << spec.style.font_pt << "'";
+         << "in enhanced color font '" << spec.style.font << "," << spec.style.font_pt
+         << "' linewidth " << lw;
       return os.str();
     case OutputFormat::Png:
       os << "set terminal pngcairo size " << (spec.size.w * 200.0) << ","
-         << (spec.size.h * 200.0) << " font '" << spec.style.font << "," << spec.style.font_pt
-         << "'";
+         << (spec.size.h * 200.0) << " enhanced font '" << spec.style.font << ","
+         << spec.style.font_pt << "' linewidth " << lw;
       return os.str();
   }
   return {};
@@ -107,16 +125,16 @@ std::string with_clause(const SeriesData& series, const Style& style) {
   os << std::fixed << std::setprecision(3);
   switch (series.spec.type) {
     case SeriesType::Line:
-      os << "with lines lw " << line_width;
+      os << "with lines lw " << std::max(1.0, line_width * 1.3);
       break;
     case SeriesType::Scatter:
-      os << "with points pt 7 ps " << style.point_size;
+      os << "with points pt 7 ps " << std::max(0.7, style.point_size * 1.4);
       break;
     case SeriesType::ErrorBars:
-      os << "with yerrorbars lw " << line_width;
+      os << "with yerrorbars lw " << std::max(1.0, line_width * 1.2);
       break;
     case SeriesType::Band:
-      os << "with lines lw " << line_width;
+      os << "with lines lw " << std::max(1.0, line_width * 1.2);
       break;
   }
   return os.str();
@@ -128,11 +146,17 @@ void emit_plot_body(std::ostream& os,
   const auto& spec = fig.spec();
   const auto& all_axes = fig.all_axes();
 
+  os << "set border linewidth 1.2 linecolor rgb '#222222'\n";
+  os << "set tics out nomirror scale 0.75\n";
+  os << "set xtics font '" << esc(spec.style.font) << "," << spec.style.font_pt << "'\n";
+  os << "set ytics font '" << esc(spec.style.font) << "," << spec.style.font_pt << "'\n";
+  os << "set format x '%.2g'\n";
+  os << "set format y '%.2g'\n";
+  os << "set key opaque box linewidth 0.8\n";
   os << "unset key\n";
-  os << "set tics out\n";
   os << "set multiplot layout " << spec.rows << "," << spec.cols;
   if (!spec.title.empty()) {
-    os << " title '" << spec.title << "'";
+    os << " title '" << esc(spec.title) << "'";
   }
   os << "\n";
 
@@ -156,17 +180,17 @@ void emit_plot_body(std::ostream& os,
     }
 
     if (!axis_spec.title.empty()) {
-      os << "set title '" << axis_spec.title << "'\n";
+      os << "set title '" << esc(axis_spec.title) << "'\n";
     }
     if (!axis_spec.xlabel.empty()) {
-      os << "set xlabel '" << axis_spec.xlabel << "'\n";
+      os << "set xlabel '" << esc(axis_spec.xlabel) << "'\n";
     }
     if (!axis_spec.ylabel.empty()) {
-      os << "set ylabel '" << axis_spec.ylabel << "'\n";
+      os << "set ylabel '" << esc(axis_spec.ylabel) << "'\n";
     }
 
     if (axis_spec.grid || spec.style.grid) {
-      os << "set grid\n";
+      os << "set grid xtics ytics linewidth 0.7 linecolor rgb '#d4d4d4'\n";
     }
     if (axis_spec.xlog) {
       os << "set logscale x\n";
@@ -191,7 +215,7 @@ void emit_plot_body(std::ostream& os,
     for (std::size_t s = 0; s < axis.series().size(); ++s) {
       const auto& series = axis.series()[s];
       os << quote(data_files[axis_idx][s]) << " using 1:2 " << with_clause(series, spec.style)
-         << " title '" << series.spec.label << "'";
+         << " title '" << esc(series.spec.label) << "'";
       if (s + 1 < axis.series().size()) {
         os << ", \\\n";
       } else {
@@ -288,6 +312,14 @@ RenderResult GnuplotBackend::render(const Figure& fig,
     log_error(result.message);
     return result;
   }
+  script_os.close();
+  if (!script_os) {
+    result.ok = false;
+    result.status = RenderStatus::IoError;
+    result.message = msg_text("failed to finalize gnuplot script", script_path.string());
+    log_error(result.message);
+    return result;
+  }
 
   const std::string check_cmd = "command -v " + executable_ + " >/dev/null 2>&1";
   if (std::system(check_cmd.c_str()) != 0) {
@@ -299,20 +331,32 @@ RenderResult GnuplotBackend::render(const Figure& fig,
     return result;
   }
 
+  const auto log_path = out_dir / "tmp" / "gnuplot.log";
   const std::string render_cmd =
-      executable_ + " " + quote(script_path) + " >/tmp/gnuplotpp.log 2>&1";
+      executable_ + " " + quote(script_path) + " >" + quote(log_path) + " 2>&1";
   const int rc = std::system(render_cmd.c_str());
   if (rc != 0) {
     result.ok = false;
     result.status = RenderStatus::ExternalToolFailure;
 #ifdef GNUPLOTPP_HAS_FMT
-    result.message =
-        fmt::format("gnuplot failed (exit={}); inspect /tmp/gnuplotpp.log", rc);
+    result.message = fmt::format("gnuplot failed (exit={}); inspect {}", rc, log_path.string());
 #else
-    result.message = "gnuplot failed; inspect /tmp/gnuplotpp.log";
+    result.message = "gnuplot failed; inspect gnuplot.log in output tmp directory";
 #endif
     log_error(result.message);
     return result;
+  }
+
+  for (const auto& out : result.outputs) {
+    std::error_code fsec;
+    const auto size = std::filesystem::file_size(out, fsec);
+    if (fsec || size == 0) {
+      result.ok = false;
+      result.status = RenderStatus::ExternalToolFailure;
+      result.message = msg_text("gnuplot completed but output is missing/empty", out.string());
+      log_error(result.message);
+      return result;
+    }
   }
 
   result.ok = true;

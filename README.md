@@ -1,6 +1,25 @@
 # gnuplotpp
 
-Pure C++20 plotting API with pluggable backends for publication-ready IEEE/AIAA figures.
+Pure C++20 plotting API with a gnuplot renderer for publication-ready IEEE/AIAA figures.
+
+## Requirements
+
+- CMake >= 3.20
+- C++20 compiler
+- `gnuplot` (required for final figure generation)
+
+Install `gnuplot`:
+
+```bash
+# macOS
+brew install gnuplot
+
+# Ubuntu/Debian
+sudo apt-get update && sudo apt-get install -y gnuplot
+
+# Fedora
+sudo dnf install -y gnuplot
+```
 
 ## Build
 
@@ -14,78 +33,50 @@ ctest --preset test-debug
 
 ```mermaid
 flowchart LR
-  A[FigureSpec/AxesSpec/SeriesSpec] --> B[Figure/Axes Containers]
+  A[FigureSpec / AxesSpec / SeriesSpec] --> B[Figure / Axes]
   B --> C[IPlotBackend]
   C --> D[GnuplotBackend]
-  C --> E[SvgBackend]
-  C --> J[PngBackend]
-  D --> F[tmp/*.dat]
-  D --> G[tmp/figure.gp]
-  D --> H[figure.pdf|svg|eps|png]
-  E --> I[figure.svg]
-  J --> K[figure.png]
+  D --> E[tmp/*.dat]
+  D --> F[tmp/figure.gp]
+  D --> G[figure.pdf / figure.svg / figure.eps]
 ```
 
-## Render Flow
+## Publication Workflow
 
-```mermaid
-sequenceDiagram
-  participant App as Example App (C++)
-  participant Fig as gnuplotpp::Figure
-  participant Be as Selected Backend
+1. Configure a publication preset (`IEEE_SingleColumn`, `IEEE_DoubleColumn`, `AIAA_Column`, `AIAA_Page`).
+2. Set output formats to vector (`Pdf`, `Svg`, optional `Eps`).
+3. Render via `GnuplotBackend` from your C++ executable.
+4. Use PDF as primary submission asset.
 
-  App->>Fig: configure spec/layout + add series
-  App->>Fig: save(out_dir)
-  Fig->>Be: render(fig, out_dir)
-  Be-->>Fig: RenderResult
-  Fig-->>App: output paths
-```
+## Publication Defaults in Renderer
 
-## CMake Presets
+- Cairo terminals with enhanced text
+- Explicit line widths and rounded joins
+- Tick formatting and outward tics
+- Grid styling suitable for print
+- Escaped plot labels/titles for robust script generation
 
-- `dev-debug`
-- `dev-release`
-- `dev-cpm`
-- `build-debug`
-- `build-release`
-- `build-cpm`
-- `test-debug`
-- `test-release`
-
-## CPM Dependencies (inside CMake)
-
-CPM is optional via `GNUPLOTPP_ENABLE_CPM=ON`.
-When enabled, CMake downloads `CPM.cmake` and resolves C++ libraries (`nlohmann_json`, `fmt`, `spdlog`).
-If network/package resolution fails, configuration now degrades with warnings and continues.
-
-## Gnuplot and CPM
-
-- CPM is best for CMake/C++ dependencies.
-- `gnuplot` is an external CLI renderer.
-- Recommended: install `gnuplot` with system package managers and keep CPM for C++ libs.
-
-## Logging and Error Handling
-
-- `RenderResult` includes `RenderStatus` (`Success`, `InvalidInput`, `IoError`, `ExternalToolMissing`, `ExternalToolFailure`, `UnsupportedFormat`).
-- Backends emit detailed file/tool failure messages and return explicit statuses.
-- If `fmt` and `spdlog` are available (via CPM or system packages), the library uses them for structured formatting/logging.
-- If not available, behavior falls back to standard C++ streams with the same status semantics.
-
-## No Separate Plot Command
-
-You run only the C++ executable.
-
-- If `gnuplot` exists, examples render publication outputs (`pdf/svg/png`) via `GnuplotBackend`.
-- If `gnuplot` is missing, examples automatically fall back to native `PngBackend` and generate `figure.png`.
-- If PNG fallback fails, examples try native `SvgBackend` as a secondary fallback.
-
-## Example Plots
+## Examples
 
 ```bash
 ./build/dev-debug/two_window_example --out out/two_window
 ./build/dev-debug/layout_2x2_example --out out/layout_2x2
 ```
 
-Generated outputs include at least:
+Expected outputs:
 
-- `out/<name>/figures/figure.png`
+- `out/<name>/figures/figure.pdf`
+- `out/<name>/figures/figure.svg`
+- `out/<name>/figures/figure.eps`
+- `out/<name>/figures/tmp/figure.gp`
+- `out/<name>/figures/tmp/ax*_series*.dat`
+
+## Error Handling
+
+`RenderResult.status` values:
+- `Success`
+- `InvalidInput`
+- `IoError`
+- `ExternalToolMissing`
+- `ExternalToolFailure`
+- `UnsupportedFormat`

@@ -1,22 +1,10 @@
 #include "gnuplotpp/gnuplot_backend.hpp"
-#include "gnuplotpp/png_backend.hpp"
 #include "gnuplotpp/plot.hpp"
 #include "gnuplotpp/presets.hpp"
-#include "gnuplotpp/svg_backend.hpp"
-
-#include <cstdlib>
 #include <filesystem>
 #include <iostream>
 #include <string>
 #include <vector>
-
-namespace {
-
-bool gnuplot_available() {
-  return std::system("command -v gnuplot >/dev/null 2>&1") == 0;
-}
-
-}  // namespace
 
 int main(int argc, char** argv) {
   using namespace gnuplotpp;
@@ -34,7 +22,7 @@ int main(int argc, char** argv) {
   apply_preset_defaults(fs);
   fs.rows = 2;
   fs.cols = 2;
-  fs.formats = {OutputFormat::Pdf, OutputFormat::Svg, OutputFormat::Png};
+  fs.formats = {OutputFormat::Pdf, OutputFormat::Svg, OutputFormat::Eps};
   fs.title = "State Error Overview";
 
   Figure fig(fs);
@@ -73,24 +61,13 @@ int main(int argc, char** argv) {
   fig.axes(2).add_series(SeriesSpec{.type = SeriesType::Line, .label = "SRIF"}, t, ez);
   fig.axes(3).add_series(SeriesSpec{.type = SeriesType::Line, .label = "SRIF"}, t, ev);
 
-  RenderResult result;
-  if (gnuplot_available()) {
-    fig.set_backend(make_gnuplot_backend());
-    result = fig.save(out_dir / "figures");
-  } else {
-    fig.set_backend(make_png_backend());
-    result = fig.save(out_dir / "figures");
-    if (!result.ok) {
-      fig.set_backend(make_svg_backend());
-      result = fig.save(out_dir / "figures");
-    }
-  }
+  fig.set_backend(make_gnuplot_backend());
+  const auto result = fig.save(out_dir / "figures");
 
   if (!result.ok) {
     std::cerr << "plot render incomplete: " << result.message << "\n";
-    if (!result.script_path.empty()) {
-      std::cerr << "script: " << result.script_path << "\n";
-    }
+    std::cerr << "install gnuplot and rerun this example\n";
+    std::cerr << "script: " << result.script_path << "\n";
     return 1;
   }
 
