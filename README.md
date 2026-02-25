@@ -35,6 +35,7 @@ Pure C++20 plotting API with a gnuplot renderer for figures.
 - CMake >= 3.20
 - C++20 compiler
 - `gnuplot` (required for final figure generation)
+- `yaml-cpp` (required for YAML spec loading)
 
 Install `gnuplot`:
 
@@ -43,10 +44,10 @@ Install `gnuplot`:
 brew install gnuplot
 
 # Ubuntu/Debian
-sudo apt-get update && sudo apt-get install -y gnuplot
+sudo apt-get update && sudo apt-get install -y gnuplot libyaml-cpp-dev
 
 # Fedora
-sudo dnf install -y gnuplot
+sudo dnf install -y gnuplot yaml-cpp-devel
 ```
 
 ## Build

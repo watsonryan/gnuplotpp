@@ -219,7 +219,9 @@ gnuplotpp::apply_facet_axes(fig, base, {"A","B","C","D","E","F"});
 ### YAML Figure Spec
 
 ```cpp
-auto ys = gnuplotpp::load_yaml_figure_spec("figure.yaml");
+auto ys = gnuplotpp::load_yaml_figure_spec(
+    "figure.yaml",
+    gnuplotpp::YamlLoadOptions{.strict_unknown_keys = true});
 gnuplotpp::Figure fig(ys.figure);
 if (!ys.axes.empty()) {
   fig.axes(0).set(ys.axes[0]);

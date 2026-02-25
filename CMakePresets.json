@@ -17,7 +17,7 @@
         "CMAKE_CXX_EXTENSIONS": "OFF",
         "BUILD_TESTING": "ON",
         "BUILD_EXAMPLES": "ON",
-        "GNUPLOTPP_ENABLE_CPM": "OFF"
+        "GNUPLOTPP_ENABLE_CPM": "ON"
       }
     },
     {
@@ -35,10 +35,10 @@
       }
     },
     {
-      "name": "dev-cpm",
+      "name": "dev-system",
       "inherits": "dev-debug",
       "cacheVariables": {
-        "GNUPLOTPP_ENABLE_CPM": "ON"
+        "GNUPLOTPP_ENABLE_CPM": "OFF"
       }
     },
     {
@@ -107,7 +107,11 @@
     },
     {
       "name": "build-cpm",
-      "configurePreset": "dev-cpm"
+      "configurePreset": "dev-debug"
+    },
+    {
+      "name": "build-system",
+      "configurePreset": "dev-system"
     },
     {
       "name": "build-macos-debug",

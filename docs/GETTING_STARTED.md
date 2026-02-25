@@ -5,6 +5,7 @@
 - CMake >= 3.20
 - C++20 compiler
 - `gnuplot` on `PATH`
+- `yaml-cpp` development package
 
 Install gnuplot:
 
@@ -13,7 +14,7 @@ Install gnuplot:
 brew install gnuplot
 
 # Ubuntu/Debian
-sudo apt-get update && sudo apt-get install -y gnuplot
+sudo apt-get update && sudo apt-get install -y gnuplot libyaml-cpp-dev
 ```
 
 ## Build
