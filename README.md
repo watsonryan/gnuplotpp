@@ -92,20 +92,7 @@ Expected outputs:
 - `out/<name>/figures/tmp/figure.gp`
 - `out/<name>/figures/tmp/ax*_series*.dat`
 
-### Axis Controls
-
-Set axis limits and log scale using `AxesSpec`:
-
-```cpp
-gnuplotpp::AxesSpec ax;
-ax.has_xlim = true;
-ax.xmin = 0.0;
-ax.xmax = 100.0;
-ax.has_ylim = true;
-ax.ymin = 1e-3;
-ax.ymax = 10.0;
-ax.ylog = true;
-```
+Detailed controls and recipes: [Plot Controls](docs/PLOT_CONTROLS.md)
 
 ## Error Handling
 
