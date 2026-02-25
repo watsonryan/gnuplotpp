@@ -74,6 +74,16 @@ When using `IEEE_SingleColumn` or `IEEE_DoubleColumn`, renderer behavior is tigh
 ./build/dev-debug/three_line_ieee_example --out out/three_line_ieee
 ```
 
+### Annotated IEEE Example
+
+Generated from:
+
+```bash
+./build/dev-debug/three_line_ieee_example --out out/three_line_ieee_readme
+```
+
+![Three-line IEEE example](docs/images/three_line_ieee_example.svg)
+
 Expected outputs:
 
 - `out/<name>/figures/figure.pdf`

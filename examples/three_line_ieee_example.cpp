@@ -26,6 +26,7 @@ int main(int argc, char** argv) {
   fs.cols = 1;
   fs.formats = {OutputFormat::Pdf, OutputFormat::Svg, OutputFormat::Eps};
   fs.title = "Three-Method Comparison";
+  fs.style.line_width_pt = 1.5;
 
   Figure fig(fs);
 
@@ -74,7 +75,7 @@ int main(int argc, char** argv) {
           " font 'Times,8' front",
       "set arrow 1 from 18," + std::to_string(y_max_plot * 0.80) + " to " +
           std::to_string(x_target) + "," + std::to_string(y_target) +
-          " lw 1.0 lc rgb '#000000' front"};
+          " lw 1.3 lc rgb '#000000' front"};
   fig.axes(0).set(ax);
 
   fig.axes(0).add_series(SeriesSpec{.type = SeriesType::Line, .label = "SRIF"}, t, srif);
