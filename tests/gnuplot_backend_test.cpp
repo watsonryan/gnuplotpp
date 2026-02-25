@@ -25,7 +25,7 @@ int main() {
   apply_preset_defaults(spec);
   spec.rows = 1;
   spec.cols = 2;
-  spec.formats = {OutputFormat::Pdf};
+  spec.formats = {OutputFormat::Pdf, OutputFormat::Png};
 
   Figure fig(spec);
 
@@ -62,6 +62,8 @@ int main() {
   const auto script = read_file(result.script_path);
   assert(script.find("set multiplot layout 1,2") != std::string::npos);
   assert(script.find("set terminal pdfcairo") != std::string::npos);
+  assert(script.find("set terminal pngcairo") != std::string::npos);
+  assert(script.find("font 'Times,70.833'") != std::string::npos);
   assert(script.find("set monochrome") != std::string::npos);
   assert(script.find("dt 1") != std::string::npos);
   assert(script.find("plot") != std::string::npos);

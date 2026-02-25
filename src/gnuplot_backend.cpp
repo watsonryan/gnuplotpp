@@ -93,9 +93,15 @@ std::string terminal_for(OutputFormat format, const FigureSpec& spec) {
          << "' linewidth " << lw;
       return os.str();
     case OutputFormat::Png:
-      os << "set terminal pngcairo size " << (spec.size.w * 600.0) << ","
-         << (spec.size.h * 600.0) << " enhanced background rgb 'white' font '"
-         << spec.style.font << "," << spec.style.font_pt << "' linewidth " << lw;
+      constexpr double kPngDpi = 600.0;
+      constexpr double kPtPerIn = 72.0;
+      const double px_per_pt = kPngDpi / kPtPerIn;
+      const double png_font_px = std::max(6.0, spec.style.font_pt * px_per_pt);
+      const double png_lw_px = std::max(1.0, lw * px_per_pt);
+      os << "set terminal pngcairo size " << (spec.size.w * kPngDpi) << ","
+         << (spec.size.h * kPngDpi)
+         << " enhanced background rgb 'white' font '" << spec.style.font << ","
+         << png_font_px << "' linewidth " << png_lw_px;
       return os.str();
   }
   return {};
