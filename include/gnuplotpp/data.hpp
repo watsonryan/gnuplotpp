@@ -3,6 +3,7 @@
 #include "gnuplotpp/plot.hpp"
 
 #include <filesystem>
+#include <span>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -20,6 +21,13 @@ struct DataTable {
 
   /** @brief Returns true when a named column exists. */
   bool has_column(const std::string& name) const;
+
+  /**
+   * @brief Validate that all requested columns exist.
+   * @param names Required column names.
+   * @throws std::out_of_range with available column list when missing.
+   */
+  void require_columns(std::span<const std::string> names) const;
 
   /** @brief Returns row count; throws when columns have inconsistent lengths. */
   std::size_t row_count() const;

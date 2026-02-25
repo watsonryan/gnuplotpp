@@ -7,16 +7,47 @@
 
 namespace gnuplotpp {
 
+namespace {
+
+std::string available_columns(const std::unordered_map<std::string, std::vector<double>>& cols) {
+  std::vector<std::string> names;
+  names.reserve(cols.size());
+  for (const auto& [name, _] : cols) {
+    names.push_back(name);
+  }
+  std::sort(names.begin(), names.end());
+  std::string out;
+  for (std::size_t i = 0; i < names.size(); ++i) {
+    out += names[i];
+    if (i + 1 < names.size()) {
+      out += ", ";
+    }
+  }
+  return out;
+}
+
+}  // namespace
+
 const std::vector<double>& DataTable::column(const std::string& name) const {
   const auto it = columns.find(name);
   if (it == columns.end()) {
-    throw std::out_of_range("column not found: " + name);
+    throw std::out_of_range("column not found: " + name + " (available: " +
+                            available_columns(columns) + ")");
   }
   return it->second;
 }
 
 bool DataTable::has_column(const std::string& name) const {
   return columns.find(name) != columns.end();
+}
+
+void DataTable::require_columns(std::span<const std::string> names) const {
+  for (const auto& name : names) {
+    if (!has_column(name)) {
+      throw std::out_of_range("required column missing: " + name + " (available: " +
+                              available_columns(columns) + ")");
+    }
+  }
 }
 
 std::size_t DataTable::row_count() const {

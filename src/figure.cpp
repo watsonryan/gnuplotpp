@@ -26,6 +26,50 @@ AxesSpec normalize_axes_spec(AxesSpec spec) {
   return spec;
 }
 
+RenderResult invalid_input(std::string msg) {
+  return RenderResult{
+      .ok = false, .status = RenderStatus::InvalidInput, .message = std::move(msg)};
+}
+
+RenderResult validate_series(const SeriesData& s,
+                             const std::size_t axis_idx,
+                             const std::size_t series_idx) {
+  if (s.spec.has_opacity && (s.spec.opacity < 0.0 || s.spec.opacity > 1.0)) {
+    return invalid_input("axis " + std::to_string(axis_idx) + " series " +
+                         std::to_string(series_idx) + ": opacity must be in [0,1]");
+  }
+  if (s.x.size() != s.y.size()) {
+    return invalid_input("axis " + std::to_string(axis_idx) + " series " +
+                         std::to_string(series_idx) + ": x/y size mismatch");
+  }
+  switch (s.spec.type) {
+    case SeriesType::Band:
+      if (s.y2.size() != s.x.size()) {
+        return invalid_input("axis " + std::to_string(axis_idx) + " series " +
+                             std::to_string(series_idx) + ": band y2 size mismatch");
+      }
+      break;
+    case SeriesType::ErrorBars:
+      if (s.yerr_low.size() != s.x.size() || s.yerr_high.size() != s.x.size()) {
+        return invalid_input("axis " + std::to_string(axis_idx) + " series " +
+                             std::to_string(series_idx) +
+                             ": errorbar low/high size mismatch");
+      }
+      break;
+    case SeriesType::Heatmap:
+      if (s.z.size() != s.x.size()) {
+        return invalid_input("axis " + std::to_string(axis_idx) + " series " +
+                             std::to_string(series_idx) + ": heatmap z size mismatch");
+      }
+      break;
+    case SeriesType::Line:
+    case SeriesType::Scatter:
+    case SeriesType::Histogram:
+      break;
+  }
+  return RenderResult{};
+}
+
 }  // namespace
 
 void Axes::set(AxesSpec spec) { spec_ = normalize_axes_spec(std::move(spec)); }
@@ -155,11 +199,40 @@ RenderResult Figure::save(const std::filesystem::path& out_dir) const {
                         .message =
                             "No backend configured. Call set_backend() before save()."};
   }
+  const auto valid = validate_figure_for_render(*this);
+  if (!valid.ok) {
+    return valid;
+  }
   return backend_->render(*this, out_dir);
 }
 
 void Figure::set_backend(std::shared_ptr<IPlotBackend> backend) {
   backend_ = std::move(backend);
+}
+
+RenderResult validate_figure_for_render(const Figure& fig) {
+  const auto& spec = fig.spec();
+  if (spec.rows <= 0 || spec.cols <= 0) {
+    return invalid_input("rows and cols must be positive");
+  }
+  if (spec.formats.empty()) {
+    return invalid_input("no output formats requested");
+  }
+  const auto& axes = fig.all_axes();
+  const auto expected = static_cast<std::size_t>(spec.rows * spec.cols);
+  if (axes.size() != expected) {
+    return invalid_input("axes count does not match rows*cols");
+  }
+  for (std::size_t ai = 0; ai < axes.size(); ++ai) {
+    const auto& axis = axes[ai];
+    for (std::size_t si = 0; si < axis.series().size(); ++si) {
+      const auto sres = validate_series(axis.series()[si], ai, si);
+      if (!sres.ok) {
+        return sres;
+      }
+    }
+  }
+  return RenderResult{};
 }
 
 }  // namespace gnuplotpp

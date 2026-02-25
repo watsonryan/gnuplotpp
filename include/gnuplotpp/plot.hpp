@@ -446,6 +446,13 @@ public:
 };
 
 /**
+ * @brief Validate figure/series invariants before backend rendering.
+ * @param fig Figure to validate.
+ * @return `ok=true` when valid, otherwise InvalidInput with message.
+ */
+RenderResult validate_figure_for_render(const Figure& fig);
+
+/**
  * @brief Figure container with a fixed subplot grid and backend delegation.
  */
 class Figure {
