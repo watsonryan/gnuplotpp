@@ -21,6 +21,9 @@ fs.title = "My Figure";
 fs.formats = {gnuplotpp::OutputFormat::Pdf,
               gnuplotpp::OutputFormat::Svg,
               gnuplotpp::OutputFormat::Eps};
+fs.palette = gnuplotpp::ColorPalette::Tab10;
+fs.text_mode = gnuplotpp::TextMode::Enhanced; // Enhanced, Plain, LaTeX
+fs.write_manifest = true; // emits out/.../manifest.json
 
 // Optional manual style override
 fs.style.font = "Times";
@@ -36,6 +39,13 @@ Preset sizes:
 - `AIAA_Column` -> 3.25 in wide
 - `AIAA_Page` -> 7.0 in wide
 
+Style profiles:
+- `apply_style_profile(fs, StyleProfile::Science)`
+- `apply_style_profile(fs, StyleProfile::IEEE_Strict)`
+- `apply_style_profile(fs, StyleProfile::AIAA_Strict)`
+- `apply_style_profile(fs, StyleProfile::Presentation)`
+- `apply_style_profile(fs, StyleProfile::DarkPrintSafe)`
+
 ## Axes-Level Controls (`AxesSpec`)
 
 ```cpp
@@ -45,6 +55,12 @@ ax.xlabel = "t [s]";
 ax.ylabel = "||e_p|| [m]";
 ax.grid = true;
 ax.legend = true;
+ax.legend_spec.position = gnuplotpp::LegendPosition::TopRight;
+ax.legend_spec.columns = 2;
+ax.legend_spec.boxed = true;
+ax.legend_spec.opaque = false;
+ax.legend_spec.has_font_pt = true;
+ax.legend_spec.font_pt = 8.0;
 
 // Axis limits
 ax.has_xlim = true;
@@ -58,6 +74,29 @@ ax.ymax = 20.0;
 ax.xlog = false;
 ax.ylog = true;
 
+// Tick/format controls
+ax.has_xtick_step = true;
+ax.xtick_step = 5.0;
+ax.has_ytick_step = true;
+ax.ytick_step = 0.5;
+ax.has_xminor_count = true;
+ax.xminor_count = 4;
+ax.has_yminor_count = true;
+ax.yminor_count = 4;
+ax.xformat = "%.2f";
+ax.yformat = "%.2e";
+
+// Typed objects/annotations
+ax.labels.push_back({.text="region A", .at="graph 0.1,0.9", .font="Times,8"});
+ax.arrows.push_back({.from="graph 0.2,0.8", .to="graph 0.35,0.65", .heads=true});
+ax.rectangles.push_back({
+  .from="graph 0.6,0.1",
+  .to="graph 0.9,0.3",
+  .has_fill_opacity=true,
+  .fill_opacity=0.15,
+  .fill_color="#99ccee"
+});
+
 // Optional advanced gnuplot commands (annotation, arrows, etc.)
 ax.gnuplot_commands = {
   "set label 1 'e_p(t)=e_0 e^{-{/Symbol l} t}' at 14,10.8 font 'Times,8' front",
@@ -69,7 +108,7 @@ ax.gnuplot_commands = {
 
 ```cpp
 gnuplotpp::SeriesSpec s;
-s.type = gnuplotpp::SeriesType::Line; // Line, Scatter, ErrorBars, Band
+s.type = gnuplotpp::SeriesType::Line; // Line, Scatter, ErrorBars, Band, Histogram, Heatmap
 s.label = "SRIF";
 s.has_line_width = true;
 s.line_width_pt = 1.6;
@@ -77,6 +116,14 @@ s.has_color = true;
 s.color = "#000000";       // RGB hex
 s.has_opacity = true;
 s.opacity = 0.15;          // [0,1], converted to ARGB for gnuplot
+```
+
+Additional structured adders:
+
+```cpp
+fig.axes(0).add_band(spec_band, x, y_low, y_high);
+fig.axes(0).add_histogram(spec_hist, bins, counts);
+fig.axes(0).add_heatmap(spec_heat, x, y, z);
 ```
 
 ## Data and Rendering
@@ -178,9 +225,11 @@ For each render:
 - `figure.pdf`
 - `figure.svg`
 - `figure.eps`
+- `figure.png` (recommended when line alpha is important)
 - `tmp/figure.gp`
 - `tmp/ax*_series*.dat`
 - `tmp/gnuplot.log`
+- `manifest.json` (when `FigureSpec::write_manifest=true`)
 
 ## Object Transparency (Native gnuplot Commands)
 
@@ -199,3 +248,4 @@ ax.gnuplot_commands = {
 - `examples/layout_2x2_example.cpp`
 - `examples/three_line_ieee_example.cpp`
 - `examples/monte_carlo_alpha_example.cpp`
+- `examples/feature_rich_showcase.cpp`

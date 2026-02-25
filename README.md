@@ -2,6 +2,18 @@
 
 Pure C++20 plotting API with a gnuplot renderer for figures.
 
+## New Capability Set
+
+- Palette/color-cycle API (`Default`, `Tab10`, `Viridis`, `Grayscale`)
+- Confidence bands (`add_band`)
+- Histogram and heatmap helpers (`add_histogram`, `add_heatmap`)
+- Rich legend controls (position, columns, box, opacity, font)
+- Tick/format controls (major step, minor count, format strings)
+- Text mode selection (`Enhanced`, `Plain`, `LaTeX` toggle)
+- Style profiles (`Science`, `IEEE_Strict`, `AIAA_Strict`, `Presentation`, `DarkPrintSafe`)
+- Typed annotations/objects (labels, arrows, rectangles)
+- Reproducibility manifest export (`manifest.json`)
+
 ## Requirements
 
 - CMake >= 3.20
@@ -74,6 +86,7 @@ When using `IEEE_SingleColumn` or `IEEE_DoubleColumn`, renderer behavior is tigh
 ./build/dev-debug/layout_2x2_example --out out/layout_2x2
 ./build/dev-debug/three_line_ieee_example --out out/three_line_ieee
 ./build/dev-debug/monte_carlo_alpha_example --out out/monte_carlo_alpha
+./build/dev-debug/feature_rich_showcase --out out/feature_rich_showcase
 ```
 
 ### Annotated IEEE Example
