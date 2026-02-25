@@ -286,6 +286,76 @@ std::string legend_position_token(const LegendPosition pos) {
   return "top right";
 }
 
+struct ResolvedAxisStyle {
+  double tick_font_pt = 8.0;
+  double label_font_pt = 9.0;
+  double title_font_pt = 9.0;
+  bool title_bold = false;
+  int border_mask = 15;
+  double border_lw = 0.9;
+  std::string border_color = "#222222";
+  bool ticks_out = false;
+  bool ticks_mirror = false;
+  bool legend_enabled = false;
+  LegendPosition legend_pos = LegendPosition::TopRight;
+  int legend_columns = 1;
+  bool legend_opaque = false;
+  bool legend_boxed = false;
+  bool legend_has_font_pt = false;
+  double legend_font_pt = 8.0;
+};
+
+ResolvedAxisStyle resolve_axis_style(const FigureSpec& spec,
+                                     const AxesSpec& axis_spec,
+                                     const double global_tick_font_pt,
+                                     const double global_label_font_pt,
+                                     const double global_title_font_pt,
+                                     const bool ieee,
+                                     const std::size_t series_count) {
+  ResolvedAxisStyle rs;
+  const auto& tx = axis_spec.typography;
+  rs.tick_font_pt = tx.has_tick_font_pt
+                        ? tx.tick_font_pt
+                        : (axis_spec.has_tick_font_pt ? axis_spec.tick_font_pt
+                                                      : global_tick_font_pt);
+  rs.label_font_pt = tx.has_label_font_pt
+                         ? tx.label_font_pt
+                         : (axis_spec.has_label_font_pt ? axis_spec.label_font_pt
+                                                        : global_label_font_pt);
+  rs.title_font_pt = tx.has_title_font_pt
+                         ? tx.title_font_pt
+                         : (axis_spec.has_title_font_pt ? axis_spec.title_font_pt
+                                                        : global_title_font_pt);
+  rs.title_bold = tx.has_title_bold
+                      ? tx.title_bold
+                      : (axis_spec.has_title_bold ? axis_spec.title_bold : spec.style.title_bold);
+
+  rs.border_mask = axis_spec.frame.has_border_mask ? axis_spec.frame.border_mask : 15;
+  rs.border_lw =
+      axis_spec.frame.has_border_line_width_pt ? axis_spec.frame.border_line_width_pt : 0.9;
+  rs.border_color =
+      axis_spec.frame.has_border_color ? axis_spec.frame.border_color : "#222222";
+  rs.ticks_out = axis_spec.frame.has_ticks_out ? axis_spec.frame.ticks_out : false;
+  rs.ticks_mirror =
+      axis_spec.frame.has_ticks_mirror ? axis_spec.frame.ticks_mirror : false;
+
+  rs.legend_enabled = axis_spec.legend && axis_spec.legend_spec.enabled;
+  rs.legend_pos = axis_spec.legend_spec.position;
+  if (spec.auto_layout && series_count >= 4 && rs.legend_pos == LegendPosition::TopRight) {
+    rs.legend_pos = LegendPosition::OutsideRight;
+  }
+  rs.legend_columns = std::max(1, axis_spec.legend_spec.columns);
+  rs.legend_opaque = axis_spec.legend_spec.opaque;
+  rs.legend_boxed = axis_spec.legend_spec.boxed;
+  rs.legend_has_font_pt = axis_spec.legend_spec.has_font_pt;
+  rs.legend_font_pt = axis_spec.legend_spec.font_pt;
+  if (!rs.legend_has_font_pt && ieee) {
+    rs.legend_has_font_pt = true;
+    rs.legend_font_pt = rs.tick_font_pt;
+  }
+  return rs;
+}
+
 void emit_typed_objects(std::ostream& os, const AxesSpec& axis_spec) {
   int label_id = 1000;
   for (const auto& lbl : axis_spec.labels) {
@@ -501,19 +571,13 @@ void emit_plot_body(std::ostream& os,
   for (std::size_t axis_idx = 0; axis_idx < all_axes.size(); ++axis_idx) {
     const auto& axis = all_axes[axis_idx];
     const auto& axis_spec = axis.spec();
-    const auto& tx = axis_spec.typography;
-    const double axis_tick_font_pt = tx.has_tick_font_pt
-                                         ? tx.tick_font_pt
-                                         : (axis_spec.has_tick_font_pt ? axis_spec.tick_font_pt
-                                                                       : tick_font_pt);
-    const double axis_label_font_pt =
-        tx.has_label_font_pt ? tx.label_font_pt
-                             : (axis_spec.has_label_font_pt ? axis_spec.label_font_pt
-                                                            : label_font_pt);
-    const double axis_title_font_pt =
-        tx.has_title_font_pt ? tx.title_font_pt
-                             : (axis_spec.has_title_font_pt ? axis_spec.title_font_pt
-                                                            : title_font_pt);
+    const auto rs = resolve_axis_style(spec,
+                                       axis_spec,
+                                       tick_font_pt,
+                                       label_font_pt,
+                                       title_font_pt,
+                                       ieee,
+                                       axis.series().size());
     emit_auto_layout(os, spec, axis_spec);
 
     os << "unset title\n";
@@ -530,66 +594,44 @@ void emit_plot_body(std::ostream& os,
     os << "unset y2tics\n";
     os << "set format x '%.2g'\n";
     os << "set format y '%.2g'\n";
-    const int border_mask =
-        axis_spec.frame.has_border_mask ? axis_spec.frame.border_mask : 15;
-    const double border_lw = axis_spec.frame.has_border_line_width_pt
-                                 ? axis_spec.frame.border_line_width_pt
-                                 : 0.9;
-    const std::string border_color =
-        axis_spec.frame.has_border_color ? axis_spec.frame.border_color : "#222222";
-    const bool ticks_out =
-        axis_spec.frame.has_ticks_out ? axis_spec.frame.ticks_out : false;
-    const bool ticks_mirror =
-        axis_spec.frame.has_ticks_mirror ? axis_spec.frame.ticks_mirror : false;
-    os << "set border " << border_mask << " linewidth " << std::max(0.2, border_lw)
-       << " linecolor rgb '" << border_color << "'\n";
-    os << "set tics " << (ticks_out ? "out" : "in") << " "
-       << (ticks_mirror ? "mirror" : "nomirror") << " scale 0.5,0.25\n";
-    os << "set xtics font '" << esc(spec.style.font) << "," << axis_tick_font_pt << "'\n";
-    os << "set ytics font '" << esc(spec.style.font) << "," << axis_tick_font_pt << "'\n";
+    os << "set border " << rs.border_mask << " linewidth " << std::max(0.2, rs.border_lw)
+       << " linecolor rgb '" << rs.border_color << "'\n";
+    os << "set tics " << (rs.ticks_out ? "out" : "in") << " "
+       << (rs.ticks_mirror ? "mirror" : "nomirror") << " scale 0.5,0.25\n";
+    os << "set xtics font '" << esc(spec.style.font) << "," << rs.tick_font_pt << "'\n";
+    os << "set ytics font '" << esc(spec.style.font) << "," << rs.tick_font_pt << "'\n";
 
-    const bool legend_enabled = axis_spec.legend && axis_spec.legend_spec.enabled;
-    if (legend_enabled) {
-      LegendPosition legend_pos = axis_spec.legend_spec.position;
-      if (spec.auto_layout && axis.series().size() >= 4 &&
-          legend_pos == LegendPosition::TopRight) {
-        legend_pos = LegendPosition::OutsideRight;
-      }
-      os << "set key " << legend_position_token(legend_pos) << "\n";
-      os << "set key maxcols " << std::max(1, axis_spec.legend_spec.columns) << "\n";
-      os << "set key " << (axis_spec.legend_spec.opaque ? "opaque" : "noopaque") << "\n";
-      os << "set key box linewidth " << (axis_spec.legend_spec.boxed ? "0.5" : "0.0") << "\n";
-      if (axis_spec.legend_spec.has_font_pt) {
-        os << "set key font '" << esc(spec.style.font) << "," << axis_spec.legend_spec.font_pt
-           << "'\n";
+    if (rs.legend_enabled) {
+      os << "set key " << legend_position_token(rs.legend_pos) << "\n";
+      os << "set key maxcols " << rs.legend_columns << "\n";
+      os << "set key " << (rs.legend_opaque ? "opaque" : "noopaque") << "\n";
+      os << "set key box linewidth " << (rs.legend_boxed ? "0.5" : "0.0") << "\n";
+      if (rs.legend_has_font_pt) {
+        os << "set key font '" << esc(spec.style.font) << "," << rs.legend_font_pt << "'\n";
       } else {
-        os << "set key font '" << esc(spec.style.font) << "," << axis_tick_font_pt << "'\n";
+        os << "set key font '" << esc(spec.style.font) << "," << rs.tick_font_pt << "'\n";
       }
     } else {
       os << "unset key\n";
     }
 
     if (!axis_spec.title.empty()) {
-      const bool title_bold = tx.has_title_bold
-                                  ? tx.title_bold
-                                  : (axis_spec.has_title_bold ? axis_spec.title_bold
-                                                              : spec.style.title_bold);
-      const std::string title_text = title_bold ? "{/:Bold " + esc(axis_spec.title) + "}"
+      const std::string title_text = rs.title_bold ? "{/:Bold " + esc(axis_spec.title) + "}"
                                                 : esc(axis_spec.title);
       os << "set title '" << title_text << "' font '" << esc(spec.style.font) << ","
-         << axis_title_font_pt << "'\n";
+         << rs.title_font_pt << "'\n";
     }
     if (!axis_spec.xlabel.empty()) {
       os << "set xlabel '" << esc(axis_spec.xlabel) << "' font '" << esc(spec.style.font) << ","
-         << axis_label_font_pt << "'\n";
+         << rs.label_font_pt << "'\n";
     }
     if (!axis_spec.ylabel.empty()) {
       os << "set ylabel '" << esc(axis_spec.ylabel) << "' font '" << esc(spec.style.font) << ","
-         << axis_label_font_pt << "'\n";
+         << rs.label_font_pt << "'\n";
     }
     if (!axis_spec.y2label.empty()) {
       os << "set y2label '" << esc(axis_spec.y2label) << "' font '" << esc(spec.style.font) << ","
-         << axis_label_font_pt << "'\n";
+         << rs.label_font_pt << "'\n";
     }
 
     if (axis_spec.grid || spec.style.grid) {
@@ -597,7 +639,7 @@ void emit_plot_body(std::ostream& os,
     }
     if (!axis_spec.colorbar_label.empty()) {
       os << "set cblabel '" << esc(axis_spec.colorbar_label) << "' font '" << esc(spec.style.font)
-         << "," << axis_label_font_pt << "'\n";
+         << "," << rs.label_font_pt << "'\n";
     }
     if (axis_spec.has_cbrange) {
       os << "set cbrange [" << axis_spec.cbmin << ":" << axis_spec.cbmax << "]\n";
