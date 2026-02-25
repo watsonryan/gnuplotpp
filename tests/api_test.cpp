@@ -3,6 +3,7 @@
 #include "gnuplotpp/facet.hpp"
 #include "gnuplotpp/plot.hpp"
 #include "gnuplotpp/presets.hpp"
+#include "gnuplotpp/quickstart.hpp"
 #include "gnuplotpp/spec_yaml.hpp"
 #include "gnuplotpp/statistics.hpp"
 #include "gnuplotpp/templates.hpp"
@@ -42,7 +43,11 @@ int main() {
   Figure fig(spec);
   AxesSpec ax;
   ax.title = "test";
+  ax.has_title_font_pt = true;
+  ax.title_font_pt = 15.0;
   fig.axes(0, 0).set(ax);
+  assert(fig.axes(0, 0).spec().typography.has_title_font_pt);
+  assert(fig.axes(0, 0).spec().typography.title_font_pt == 15.0);
 
   const std::vector<double> x{0.0, 1.0, 2.0};
   const std::vector<double> y{1.0, 2.0, 3.0};
@@ -81,6 +86,19 @@ int main() {
 
   FigureSpec built_spec = FigureBuilder(spec).layout(1, 1).manifest(true).spec();
   assert(built_spec.write_manifest);
+  const auto quick_spec = make_quick_figure_spec(
+      QuickFigureOptions{.preset = Preset::Custom,
+                         .profile = StyleProfile::Tufte_Minimal,
+                         .size = FigureSizeInches{.w = 5.0, .h = 3.0},
+                         .title = "quick"});
+  assert(quick_spec.style.title_bold);
+  assert(quick_spec.title == "quick");
+  auto quick_fig = make_quick_figure(
+      QuickFigureOptions{.preset = Preset::IEEE_SingleColumn, .profile = StyleProfile::Science});
+  assert(quick_fig.spec().rows == 1);
+  const auto quick_ax = make_quick_axes("A", "x", "y", true, false);
+  assert(quick_ax.grid);
+  assert(!quick_ax.legend);
 
   const auto ma = moving_average(y, 2);
   assert(ma.size() == y.size());

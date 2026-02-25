@@ -4,7 +4,31 @@
 
 namespace gnuplotpp {
 
-void Axes::set(AxesSpec spec) { spec_ = std::move(spec); }
+namespace {
+
+AxesSpec normalize_axes_spec(AxesSpec spec) {
+  if (spec.has_tick_font_pt && !spec.typography.has_tick_font_pt) {
+    spec.typography.has_tick_font_pt = true;
+    spec.typography.tick_font_pt = spec.tick_font_pt;
+  }
+  if (spec.has_label_font_pt && !spec.typography.has_label_font_pt) {
+    spec.typography.has_label_font_pt = true;
+    spec.typography.label_font_pt = spec.label_font_pt;
+  }
+  if (spec.has_title_font_pt && !spec.typography.has_title_font_pt) {
+    spec.typography.has_title_font_pt = true;
+    spec.typography.title_font_pt = spec.title_font_pt;
+  }
+  if (spec.has_title_bold && !spec.typography.has_title_bold) {
+    spec.typography.has_title_bold = true;
+    spec.typography.title_bold = spec.title_bold;
+  }
+  return spec;
+}
+
+}  // namespace
+
+void Axes::set(AxesSpec spec) { spec_ = normalize_axes_spec(std::move(spec)); }
 
 void Axes::add_series(const SeriesSpec& spec,
                       std::span<const double> x,

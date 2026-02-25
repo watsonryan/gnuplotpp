@@ -64,9 +64,17 @@ int main(int argc, char** argv) {
   ax.xmax = 22.0;
   ax.has_xtick_step = true;
   ax.xtick_step = 5.0;
+  ax.frame.has_border_mask = true;
+  ax.frame.border_mask = 3;
+  ax.frame.has_border_line_width_pt = true;
+  ax.frame.border_line_width_pt = 0.8;
+  ax.frame.has_border_color = true;
+  ax.frame.border_color = "#1c1c1c";
+  ax.frame.has_ticks_out = true;
+  ax.frame.ticks_out = true;
+  ax.frame.has_ticks_mirror = true;
+  ax.frame.ticks_mirror = false;
   ax.gnuplot_commands = {
-      "set border 3 linewidth 0.8 linecolor rgb '#1c1c1c'",
-      "set tics out nomirror",
       "set arrow 10 from graph 0, first 0 to graph 1, first 0 nohead lc rgb '#9a9a9a' dt 3 lw 0.8 back"};
   fig.axes(0).set(ax);
 
