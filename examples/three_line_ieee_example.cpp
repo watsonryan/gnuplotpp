@@ -63,19 +63,12 @@ int main(int argc, char** argv) {
   }
   const double y_max_plot = y_max_data * 1.05;
   const double y_min_plot = std::max(1.0e-3, srif.back() * 0.8);
-  const std::size_t idx_target = 80;  // x = 40 s, step = 0.5 s
-  const double x_target = t[idx_target];
-  const double y_target = srif[idx_target];
 
   ax.has_ylim = true;
   ax.ymin = y_min_plot;
   ax.ymax = y_max_plot;
   ax.gnuplot_commands = {
-      "set label 1 'e_p(t)=e_0 e^{-{/Symbol l} t}' at 14," + std::to_string(y_max_plot * 0.86) +
-          " font 'Times,8' front",
-      "set arrow 1 from 18," + std::to_string(y_max_plot * 0.80) + " to " +
-          std::to_string(x_target) + "," + std::to_string(y_target) +
-          " heads size screen 0.006,9,20 lw 0.8 lc rgb '#000000' front"};
+      "set label 1 'e_p(t)=e_0 e^{-{/Symbol l} t}' at graph 0.06,0.10 font 'Times,8' front"};
   fig.axes(0).set(ax);
 
   fig.axes(0).add_series(SeriesSpec{.type = SeriesType::Line, .label = "SRIF"}, t, srif);
