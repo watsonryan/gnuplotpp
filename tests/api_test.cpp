@@ -182,11 +182,54 @@ int main() {
           "axes:\n"
           "  - title: a0\n"
           "    xlabel: t\n"
-          "    ylabel: y\n";
+          "    ylabel: y\n"
+          "    y2label: p(event)\n"
+          "    y2log: true\n"
+          "    y2min: 0.1\n"
+          "    y2max: 0.9\n"
+          "    legend_spec:\n"
+          "      position: top_left\n"
+          "      columns: 2\n"
+          "      boxed: true\n"
+          "      opaque: false\n"
+          "      font_pt: 8.0\n"
+          "    typography:\n"
+          "      tick_font_pt: 10.0\n"
+          "      label_font_pt: 12.0\n"
+          "      title_font_pt: 14.0\n"
+          "      title_bold: true\n"
+          "    frame:\n"
+          "      border_mask: 3\n"
+          "      border_line_width_pt: 0.9\n"
+          "      border_color: '#111111'\n"
+          "      ticks_out: true\n"
+          "      ticks_mirror: false\n";
   }
   const auto ys = load_yaml_figure_spec(yaml_path);
   assert(ys.figure.title == "yaml");
   assert(!ys.axes.empty());
+  assert(ys.axes[0].y2label == "p(event)");
+  assert(ys.axes[0].y2log);
+  assert(ys.axes[0].has_y2lim);
+  assert(ys.axes[0].y2min == 0.1);
+  assert(ys.axes[0].y2max == 0.9);
+  assert(ys.axes[0].legend_spec.position == LegendPosition::TopLeft);
+  assert(ys.axes[0].legend_spec.columns == 2);
+  assert(ys.axes[0].legend_spec.boxed);
+  assert(ys.axes[0].legend_spec.has_font_pt);
+  assert(ys.axes[0].legend_spec.font_pt == 8.0);
+  assert(ys.axes[0].typography.has_tick_font_pt);
+  assert(ys.axes[0].typography.tick_font_pt == 10.0);
+  assert(ys.axes[0].typography.has_title_bold);
+  assert(ys.axes[0].typography.title_bold);
+  assert(ys.axes[0].frame.has_border_mask);
+  assert(ys.axes[0].frame.border_mask == 3);
+  assert(ys.axes[0].frame.has_border_color);
+  assert(ys.axes[0].frame.border_color == "#111111");
+  assert(ys.axes[0].frame.has_ticks_out);
+  assert(ys.axes[0].frame.ticks_out);
+  assert(ys.axes[0].frame.has_ticks_mirror);
+  assert(!ys.axes[0].frame.ticks_mirror);
   std::filesystem::remove(yaml_path);
 
   const auto no_backend = fig.save("out");
