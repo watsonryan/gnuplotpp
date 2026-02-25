@@ -19,6 +19,8 @@ if(GNUPLOTPP_ENABLE_LOGGING AND NOT GNUPLOTPP_ENABLE_CPM)
 endif()
 
 add_library(gnuplotpp
+  src/data.cpp
+  src/facet.cpp
   src/figure.cpp
   src/gnuplot_backend.cpp
   src/presets.cpp
@@ -73,6 +75,9 @@ if(BUILD_EXAMPLES)
 
   add_executable(feature_rich_showcase examples/feature_rich_showcase.cpp)
   target_link_libraries(feature_rich_showcase PRIVATE gnuplotpp::gnuplotpp)
+
+  add_executable(interactive_facet_example examples/interactive_facet_example.cpp)
+  target_link_libraries(interactive_facet_example PRIVATE gnuplotpp::gnuplotpp)
 endif()
 
 if(BUILD_TESTING)

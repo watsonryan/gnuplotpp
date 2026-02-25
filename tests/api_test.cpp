@@ -1,10 +1,13 @@
 #include "gnuplotpp/builder.hpp"
+#include "gnuplotpp/data.hpp"
+#include "gnuplotpp/facet.hpp"
 #include "gnuplotpp/plot.hpp"
 #include "gnuplotpp/presets.hpp"
 #include "gnuplotpp/statistics.hpp"
 #include "gnuplotpp/theme.hpp"
 
 #include <cassert>
+#include <fstream>
 #include <memory>
 #include <stdexcept>
 #include <vector>
@@ -87,6 +90,35 @@ int main() {
   std::vector<double> hi_b;
   percentile_band(ens, 0.1, 0.9, lo_b, hi_b);
   assert(lo_b.size() == 3);
+  std::vector<std::vector<double>> fan_lo;
+  std::vector<std::vector<double>> fan_hi;
+  fan_chart_bands(ens, {0.1, 0.25, 0.75, 0.9}, fan_lo, fan_hi);
+  assert(fan_lo.size() == 2);
+  std::vector<double> vy;
+  std::vector<double> vw;
+  violin_profile(y, vy, vw, 32);
+  assert(vy.size() == vw.size());
+
+  const auto csv_path = std::filesystem::temp_directory_path() / "gnuplotpp_data_test.csv";
+  {
+    std::ofstream os(csv_path);
+    os << "t,pos,vel\n";
+    os << "0,1.0,0.1\n";
+    os << "1,2.0,0.2\n";
+  }
+  const auto tbl = read_csv_numeric(csv_path);
+  assert(tbl.column("t").size() == 2U);
+  assert(label_with_unit("position", "m") == "position [m]");
+  std::filesystem::remove(csv_path);
+
+  const auto rc = facet_grid(5);
+  assert(rc.first * rc.second >= 5);
+  FigureSpec facet_spec = spec;
+  facet_spec.rows = rc.first;
+  facet_spec.cols = rc.second;
+  Figure facet_fig(facet_spec);
+  apply_facet_axes(facet_fig, AxesSpec{.xlabel = "x"}, {"a", "b", "c", "d", "e"});
+  assert(facet_fig.axes(0).spec().title == "a");
 
   const auto theme_path = std::filesystem::temp_directory_path() / "gnuplotpp_theme_test.json";
   assert(save_theme_json(theme_path, built_spec));
