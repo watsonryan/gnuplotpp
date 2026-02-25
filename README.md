@@ -6,7 +6,7 @@ Pure C++20 plotting API with a gnuplot renderer for figures.
 
 - Palette/color-cycle API (`Default`, `Tab10`, `Viridis`, `Grayscale`)
 - Confidence bands (`add_band`)
-- Histogram and heatmap helpers (`add_histogram`, `add_heatmap`)
+- Histogram, KDE, and heatmap helpers (`add_histogram`, `gaussian_kde`, `add_heatmap`)
 - Rich legend controls (position, columns, box, opacity, font)
 - Tick/format controls (major step, minor count, format strings)
 - Text mode selection (`Enhanced`, `Plain`, `LaTeX` toggle)

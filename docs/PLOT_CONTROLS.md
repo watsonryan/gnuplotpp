@@ -9,6 +9,7 @@ This document is the full control reference for `gnuplotpp` plotting.
 - `gnuplotpp::SeriesSpec`
 - `gnuplotpp::Figure`
 - `gnuplotpp::Axes`
+- `gnuplotpp::gaussian_kde`
 
 ## Figure-Level Controls (`FigureSpec`)
 
@@ -124,6 +125,9 @@ Additional structured adders:
 fig.axes(0).add_band(spec_band, x, y_low, y_high);
 fig.axes(0).add_histogram(spec_hist, bins, counts);
 fig.axes(0).add_heatmap(spec_heat, x, y, z);
+
+auto kde = gnuplotpp::gaussian_kde(samples, bins);
+fig.axes(0).add_series({.label="KDE"}, bins, kde);
 ```
 
 ## Data and Rendering
