@@ -63,7 +63,7 @@ When using `IEEE_SingleColumn` or `IEEE_DoubleColumn`, renderer behavior is tigh
 - 8.5 pt Times-style text defaults
 - monochrome plotting (`set monochrome`)
 - dashed line-style differentiation per series (`dt 1..N`)
-- stronger axis/series stroke weights for print legibility
+- SciencePlots-like axis defaults: inward mirrored ticks, visible minor ticks, thin 0.5 axis/grid strokes
 - vector-first outputs (`PDF`, `SVG`, `EPS`)
 
 ## Examples

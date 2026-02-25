@@ -75,7 +75,7 @@ bool is_ieee_preset(const Preset preset) {
 std::string terminal_for(OutputFormat format, const FigureSpec& spec) {
   std::ostringstream os;
   os << std::fixed << std::setprecision(3);
-  const double lw = std::max(1.0, spec.style.line_width_pt * 1.6);
+  const double lw = std::max(0.5, spec.style.line_width_pt);
   switch (format) {
     case OutputFormat::Pdf:
       os << "set terminal pdfcairo size " << spec.size.w << "in," << spec.size.h
@@ -114,25 +114,25 @@ std::string with_clause(const SeriesData& series,
   os << std::fixed << std::setprecision(3);
   switch (series.spec.type) {
     case SeriesType::Line:
-      os << "with lines lw " << std::max(1.0, line_width * 1.3);
+      os << "with lines lw " << std::max(0.5, line_width);
       if (ieee) {
         os << " lc rgb '#000000' dt " << dt;
       }
       break;
     case SeriesType::Scatter:
-      os << "with points pt 7 ps " << std::max(0.7, style.point_size * 1.4);
+      os << "with points pt 7 ps " << std::max(0.5, style.point_size);
       if (ieee) {
         os << " lc rgb '#000000'";
       }
       break;
     case SeriesType::ErrorBars:
-      os << "with yerrorbars lw " << std::max(1.0, line_width * 1.2);
+      os << "with yerrorbars lw " << std::max(0.5, line_width);
       if (ieee) {
         os << " lc rgb '#000000' dt " << dt;
       }
       break;
     case SeriesType::Band:
-      os << "with lines lw " << std::max(1.0, line_width * 1.2);
+      os << "with lines lw " << std::max(0.5, line_width);
       if (ieee) {
         os << " lc rgb '#000000' dt " << dt;
       }
@@ -151,8 +151,8 @@ void emit_plot_body(std::ostream& os,
   const double label_font_pt = ieee ? 8.5 : spec.style.font_pt;
   const double title_font_pt = ieee ? 8.5 : spec.style.font_pt;
 
-  os << "set border linewidth 1.2 linecolor rgb '#222222'\n";
-  os << "set tics in nomirror scale 0.6,0.3\n";
+  os << "set border linewidth 0.5 linecolor rgb '#222222'\n";
+  os << "set tics in mirror scale 0.5,0.25\n";
   os << "set mxtics 2\n";
   os << "set mytics 2\n";
   os << "set xtics font '" << esc(spec.style.font) << "," << tick_font_pt << "'\n";
@@ -213,7 +213,7 @@ void emit_plot_body(std::ostream& os,
     }
 
     if (axis_spec.grid || spec.style.grid) {
-      os << "set grid xtics ytics linewidth 0.7 linecolor rgb '#d4d4d4'\n";
+      os << "set grid xtics ytics linewidth 0.5 linecolor rgb '#d0d0d0'\n";
     }
     if (axis_spec.xlog) {
       os << "set logscale x\n";
