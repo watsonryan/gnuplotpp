@@ -1,5 +1,7 @@
 #pragma once
 
+#include "gnuplotpp/plot.hpp"
+
 #include <filesystem>
 #include <string>
 #include <unordered_map>
@@ -15,6 +17,36 @@ struct DataTable {
 
   /** @brief Access a column by name; throws when missing. */
   const std::vector<double>& column(const std::string& name) const;
+
+  /** @brief Returns true when a named column exists. */
+  bool has_column(const std::string& name) const;
+
+  /** @brief Returns row count; throws when columns have inconsistent lengths. */
+  std::size_t row_count() const;
+
+  /**
+   * @brief Add a line series from named columns.
+   * @param ax Target axes.
+   * @param spec Series style.
+   * @param x_name X column.
+   * @param y_name Y column.
+   */
+  void add_line(Axes& ax,
+                SeriesSpec spec,
+                const std::string& x_name,
+                const std::string& y_name) const;
+
+  /**
+   * @brief Add a scatter series from named columns.
+   * @param ax Target axes.
+   * @param spec Series style.
+   * @param x_name X column.
+   * @param y_name Y column.
+   */
+  void add_scatter(Axes& ax,
+                   SeriesSpec spec,
+                   const std::string& x_name,
+                   const std::string& y_name) const;
 };
 
 /**

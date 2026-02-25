@@ -4,6 +4,8 @@
 #include <sstream>
 #include <string>
 
+#include "gnuplotpp/presets.hpp"
+
 namespace gnuplotpp {
 namespace {
 
@@ -81,6 +83,32 @@ bool load_theme_json(const std::filesystem::path& path, FigureSpec& spec) {
   spec.text_mode = static_cast<TextMode>(text_mode);
   spec.style.grid = grid != 0;
   return true;
+}
+
+void apply_theme_preset(FigureSpec& spec, const ThemePreset preset) {
+  switch (preset) {
+    case ThemePreset::IEEE_Strict_v1:
+      apply_style_profile(spec, StyleProfile::IEEE_Strict);
+      break;
+    case ThemePreset::Science_v1:
+      apply_style_profile(spec, StyleProfile::Science);
+      break;
+    case ThemePreset::Tufte_Minimal_v1:
+      apply_style_profile(spec, StyleProfile::Tufte_Minimal);
+      break;
+  }
+}
+
+const char* theme_preset_id(const ThemePreset preset) noexcept {
+  switch (preset) {
+    case ThemePreset::IEEE_Strict_v1:
+      return "ieee_strict_v1";
+    case ThemePreset::Science_v1:
+      return "science_v1";
+    case ThemePreset::Tufte_Minimal_v1:
+      return "tufte_minimal_v1";
+  }
+  return "unknown";
 }
 
 }  // namespace gnuplotpp

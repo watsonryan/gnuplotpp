@@ -145,6 +145,8 @@ int main() {
   }
   const auto tbl = read_csv_numeric(csv_path);
   assert(tbl.column("t").size() == 2U);
+  assert(tbl.has_column("pos"));
+  assert(tbl.row_count() == 2U);
   assert(label_with_unit("position", "m") == "position [m]");
   std::filesystem::remove(csv_path);
 
@@ -231,6 +233,42 @@ int main() {
   assert(ys.axes[0].frame.has_ticks_mirror);
   assert(!ys.axes[0].frame.ticks_mirror);
   std::filesystem::remove(yaml_path);
+
+  FigureSpec composition_spec = spec;
+  composition_spec.rows = 2;
+  composition_spec.cols = 2;
+  Figure composition_fig(composition_spec);
+  for (int i = 0; i < 4; ++i) {
+    composition_fig.axes(i).set(AxesSpec{});
+  }
+  apply_panel_titles(composition_fig, {"A", "B", "C", "D"});
+  assert(composition_fig.axes(2).spec().title == "C");
+  LegendSpec shared_legend;
+  shared_legend.enabled = true;
+  shared_legend.position = LegendPosition::TopLeft;
+  apply_shared_legend(composition_fig, shared_legend, 0);
+  assert(composition_fig.axes(0).spec().legend);
+  assert(!composition_fig.axes(1).spec().legend);
+  apply_shared_colorbar_label(composition_fig, "density", 3);
+  assert(composition_fig.axes(3).spec().colorbar_label == "density");
+  assert(composition_fig.axes(0).spec().colorbar_label.empty());
+
+  std::vector<double> lx{0.0, 1.0, 2.0, 3.0};
+  std::vector<double> ly{0.0, 0.1, 0.2, 1.5};
+  AxesSpec auto_leg_ax;
+  auto_place_legend(auto_leg_ax, lx, ly);
+  assert(auto_leg_ax.legend);
+
+  Figure table_fig(spec);
+  AxesSpec table_ax;
+  table_ax.title = "table";
+  table_fig.axes(0, 0).set(table_ax);
+  tbl.add_line(table_fig.axes(0, 0), SeriesSpec{.label = "pos"}, "t", "pos");
+  assert(table_fig.axes(0, 0).series().size() == 1U);
+
+  FigureSpec themed_spec = spec;
+  apply_theme_preset(themed_spec, ThemePreset::Tufte_Minimal_v1);
+  assert(std::string(theme_preset_id(ThemePreset::Tufte_Minimal_v1)) == "tufte_minimal_v1");
 
   const auto no_backend = fig.save("out");
   assert(!no_backend.ok);
