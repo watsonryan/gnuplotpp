@@ -231,6 +231,10 @@ void emit_plot_body(std::ostream& os,
       os << "set yrange [" << axis_spec.ymin << ":" << axis_spec.ymax << "]\n";
     }
 
+    for (const auto& cmd : axis_spec.gnuplot_commands) {
+      os << cmd << "\n";
+    }
+
     if (axis.series().empty()) {
       os << "plot 1/0 notitle\n";
       continue;

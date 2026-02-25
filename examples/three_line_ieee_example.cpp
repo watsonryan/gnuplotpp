@@ -35,6 +35,9 @@ int main(int argc, char** argv) {
   ax.legend = true;
   ax.grid = true;
   ax.ylog = true;
+  ax.gnuplot_commands = {
+      "set label 1 'e_p(t)=e_0 e^{-{/Symbol l} t}' at 18,4.0 font 'Times,8'",
+      "set arrow 1 from 34,3.6 to 58,1.9 lw 1.0 lc rgb '#000000'"};
   fig.axes(0).set(ax);
 
   std::vector<double> t;

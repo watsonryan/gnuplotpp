@@ -70,6 +70,9 @@ struct AxesSpec {
 
   bool xlog = false;
   bool ylog = false;
+
+  // Optional raw gnuplot commands for advanced annotations (arrows/labels/etc).
+  std::vector<std::string> gnuplot_commands;
 };
 
 /** @brief Supported series drawing types. */
