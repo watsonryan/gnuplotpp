@@ -3,6 +3,7 @@
 #include "gnuplotpp/plot.hpp"
 #include "gnuplotpp/presets.hpp"
 
+#include <algorithm>
 #include <filesystem>
 #include <string>
 #include <vector>
@@ -35,10 +36,6 @@ int main(int argc, char** argv) {
   ax.legend = true;
   ax.grid = true;
   ax.ylog = true;
-  ax.gnuplot_commands = {
-      "set label 1 'e_p(t)=e_0 e^{-{/Symbol l} t}' at 14,6.6 font 'Times,8' front",
-      "set arrow 1 from 18,6.1 to 40,2.857 lw 1.0 lc rgb '#000000' front"};
-  fig.axes(0).set(ax);
 
   std::vector<double> t;
   std::vector<double> srif;
@@ -52,6 +49,33 @@ int main(int argc, char** argv) {
     ukf.push_back(10.0 / (1.0 + 0.06 * x));
     ekf.push_back(11.0 / (1.0 + 0.07 * x));
   }
+
+  double y_max_data = 0.0;
+  for (const double v : srif) {
+    y_max_data = std::max(y_max_data, v);
+  }
+  for (const double v : ukf) {
+    y_max_data = std::max(y_max_data, v);
+  }
+  for (const double v : ekf) {
+    y_max_data = std::max(y_max_data, v);
+  }
+  const double y_max_plot = y_max_data * 1.05;
+  const double y_min_plot = std::max(1.0e-3, srif.back() * 0.8);
+  const std::size_t idx_target = 80;  // x = 40 s, step = 0.5 s
+  const double x_target = t[idx_target];
+  const double y_target = srif[idx_target];
+
+  ax.has_ylim = true;
+  ax.ymin = y_min_plot;
+  ax.ymax = y_max_plot;
+  ax.gnuplot_commands = {
+      "set label 1 'e_p(t)=e_0 e^{-{/Symbol l} t}' at 14," + std::to_string(y_max_plot * 0.86) +
+          " font 'Times,8' front",
+      "set arrow 1 from 18," + std::to_string(y_max_plot * 0.80) + " to " +
+          std::to_string(x_target) + "," + std::to_string(y_target) +
+          " lw 1.0 lc rgb '#000000' front"};
+  fig.axes(0).set(ax);
 
   fig.axes(0).add_series(SeriesSpec{.type = SeriesType::Line, .label = "SRIF"}, t, srif);
   fig.axes(0).add_series(SeriesSpec{.type = SeriesType::Line, .label = "UKF"}, t, ukf);
