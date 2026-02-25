@@ -6,3 +6,9 @@ cmake-build-*/
 *.tmp
 .DS_Store
 out/
+
+# local design docs
+cpp_publication_plotting_design_doc.md
+
+# local design docs
+cpp_publication_plotting_design_doc.md
