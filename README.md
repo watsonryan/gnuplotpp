@@ -56,6 +56,16 @@ flowchart LR
 - Grid styling suitable for print
 - Escaped plot labels/titles for robust script generation
 
+### Strict IEEE Mode
+
+When using `IEEE_SingleColumn` or `IEEE_DoubleColumn`, renderer behavior is tightened to print-safe defaults:
+
+- 8.5 pt Times-style text defaults
+- monochrome plotting (`set monochrome`)
+- dashed line-style differentiation per series (`dt 1..N`)
+- stronger axis/series stroke weights for print legibility
+- vector-first outputs (`PDF`, `SVG`, `EPS`)
+
 ## Examples
 
 ```bash

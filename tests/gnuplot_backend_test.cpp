@@ -62,6 +62,8 @@ int main() {
   const auto script = read_file(result.script_path);
   assert(script.find("set multiplot layout 1,2") != std::string::npos);
   assert(script.find("set terminal pdfcairo") != std::string::npos);
+  assert(script.find("set monochrome") != std::string::npos);
+  assert(script.find("dt 1") != std::string::npos);
   assert(script.find("plot") != std::string::npos);
 
   const auto data0 = out_dir / "tmp" / "ax0_series0.dat";

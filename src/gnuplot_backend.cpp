@@ -88,6 +88,10 @@ std::string extension_for(OutputFormat format) {
   return "out";
 }
 
+bool is_ieee_preset(const Preset preset) {
+  return preset == Preset::IEEE_SingleColumn || preset == Preset::IEEE_DoubleColumn;
+}
+
 std::string terminal_for(OutputFormat format, const FigureSpec& spec) {
   std::ostringstream os;
   os << std::fixed << std::setprecision(3);
@@ -117,24 +121,41 @@ std::string terminal_for(OutputFormat format, const FigureSpec& spec) {
   return {};
 }
 
-std::string with_clause(const SeriesData& series, const Style& style) {
+std::string with_clause(const SeriesData& series,
+                        const Style& style,
+                        const Preset preset,
+                        const std::size_t series_idx) {
   const double line_width =
       series.spec.has_line_width ? series.spec.line_width_pt : style.line_width_pt;
+  const bool ieee = is_ieee_preset(preset);
+  const int dt = static_cast<int>(series_idx % 7U) + 1;
 
   std::ostringstream os;
   os << std::fixed << std::setprecision(3);
   switch (series.spec.type) {
     case SeriesType::Line:
       os << "with lines lw " << std::max(1.0, line_width * 1.3);
+      if (ieee) {
+        os << " lc rgb '#000000' dt " << dt;
+      }
       break;
     case SeriesType::Scatter:
       os << "with points pt 7 ps " << std::max(0.7, style.point_size * 1.4);
+      if (ieee) {
+        os << " lc rgb '#000000'";
+      }
       break;
     case SeriesType::ErrorBars:
       os << "with yerrorbars lw " << std::max(1.0, line_width * 1.2);
+      if (ieee) {
+        os << " lc rgb '#000000' dt " << dt;
+      }
       break;
     case SeriesType::Band:
       os << "with lines lw " << std::max(1.0, line_width * 1.2);
+      if (ieee) {
+        os << " lc rgb '#000000' dt " << dt;
+      }
       break;
   }
   return os.str();
@@ -145,13 +166,20 @@ void emit_plot_body(std::ostream& os,
                     const std::vector<std::vector<std::filesystem::path>>& data_files) {
   const auto& spec = fig.spec();
   const auto& all_axes = fig.all_axes();
+  const bool ieee = is_ieee_preset(spec.preset);
+  const double tick_font_pt = ieee ? 8.0 : spec.style.font_pt;
+  const double label_font_pt = ieee ? 8.5 : spec.style.font_pt;
+  const double title_font_pt = ieee ? 8.5 : spec.style.font_pt;
 
   os << "set border linewidth 1.2 linecolor rgb '#222222'\n";
   os << "set tics out nomirror scale 0.75\n";
-  os << "set xtics font '" << esc(spec.style.font) << "," << spec.style.font_pt << "'\n";
-  os << "set ytics font '" << esc(spec.style.font) << "," << spec.style.font_pt << "'\n";
+  os << "set xtics font '" << esc(spec.style.font) << "," << tick_font_pt << "'\n";
+  os << "set ytics font '" << esc(spec.style.font) << "," << tick_font_pt << "'\n";
   os << "set format x '%.2g'\n";
   os << "set format y '%.2g'\n";
+  if (ieee) {
+    os << "set monochrome\n";
+  }
   os << "set key opaque box linewidth 0.8\n";
   os << "unset key\n";
   os << "set multiplot layout " << spec.rows << "," << spec.cols;
@@ -175,18 +203,24 @@ void emit_plot_body(std::ostream& os,
 
     if (axis_spec.legend) {
       os << "set key top right\n";
+      if (ieee) {
+        os << "set key font '" << esc(spec.style.font) << ",8.0'\n";
+      }
     } else {
       os << "unset key\n";
     }
 
     if (!axis_spec.title.empty()) {
-      os << "set title '" << esc(axis_spec.title) << "'\n";
+      os << "set title '" << esc(axis_spec.title) << "' font '" << esc(spec.style.font) << ","
+         << title_font_pt << "'\n";
     }
     if (!axis_spec.xlabel.empty()) {
-      os << "set xlabel '" << esc(axis_spec.xlabel) << "'\n";
+      os << "set xlabel '" << esc(axis_spec.xlabel) << "' font '" << esc(spec.style.font) << ","
+         << label_font_pt << "'\n";
     }
     if (!axis_spec.ylabel.empty()) {
-      os << "set ylabel '" << esc(axis_spec.ylabel) << "'\n";
+      os << "set ylabel '" << esc(axis_spec.ylabel) << "' font '" << esc(spec.style.font) << ","
+         << label_font_pt << "'\n";
     }
 
     if (axis_spec.grid || spec.style.grid) {
@@ -214,7 +248,8 @@ void emit_plot_body(std::ostream& os,
     os << "plot ";
     for (std::size_t s = 0; s < axis.series().size(); ++s) {
       const auto& series = axis.series()[s];
-      os << quote(data_files[axis_idx][s]) << " using 1:2 " << with_clause(series, spec.style)
+      os << quote(data_files[axis_idx][s]) << " using 1:2 "
+         << with_clause(series, spec.style, spec.preset, s)
          << " title '" << esc(series.spec.label) << "'";
       if (s + 1 < axis.series().size()) {
         os << ", \\\n";

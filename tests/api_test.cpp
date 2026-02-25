@@ -27,7 +27,7 @@ int main() {
   spec.cols = 2;
 
   assert(spec.size.w == 7.16);
-  assert(spec.style.font_pt == 9.0);
+  assert(spec.style.font_pt == 8.5);
 
   Figure fig(spec);
   AxesSpec ax;
