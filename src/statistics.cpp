@@ -233,6 +233,59 @@ double inv_norm_cdf(const double p) {
 }
 }  // namespace
 
+namespace {
+
+bool solve_linear_system(std::vector<std::vector<double>>& a, std::vector<double>& b) {
+  const std::size_t n = a.size();
+  if (n == 0 || b.size() != n) {
+    return false;
+  }
+  for (std::size_t i = 0; i < n; ++i) {
+    std::size_t pivot = i;
+    double best = std::abs(a[i][i]);
+    for (std::size_t r = i + 1; r < n; ++r) {
+      const double v = std::abs(a[r][i]);
+      if (v > best) {
+        best = v;
+        pivot = r;
+      }
+    }
+    if (best < 1e-14) {
+      return false;
+    }
+    if (pivot != i) {
+      std::swap(a[i], a[pivot]);
+      std::swap(b[i], b[pivot]);
+    }
+    const double diag = a[i][i];
+    for (std::size_t c = i; c < n; ++c) {
+      a[i][c] /= diag;
+    }
+    b[i] /= diag;
+    for (std::size_t r = 0; r < n; ++r) {
+      if (r == i) {
+        continue;
+      }
+      const double f = a[r][i];
+      for (std::size_t c = i; c < n; ++c) {
+        a[r][c] -= f * a[i][c];
+      }
+      b[r] -= f * b[i];
+    }
+  }
+  return true;
+}
+
+double eval_poly(const std::vector<double>& coeffs, const double x) {
+  double y = 0.0;
+  for (std::size_t i = coeffs.size(); i > 0; --i) {
+    y = y * x + coeffs[i - 1];
+  }
+  return y;
+}
+
+}  // namespace
+
 void qq_plot_normal(std::span<const double> samples,
                     std::vector<double>& theo,
                     std::vector<double>& samp) {
@@ -378,6 +431,62 @@ std::vector<double> linear_fit_line(const LinearFitResult& fit, std::span<const 
   std::vector<double> yhat(x.size(), 0.0);
   for (std::size_t i = 0; i < x.size(); ++i) {
     yhat[i] = fit.slope * x[i] + fit.intercept;
+  }
+  return yhat;
+}
+
+PolynomialFitResult polynomial_fit(std::span<const double> x,
+                                   std::span<const double> y,
+                                   const std::size_t degree) {
+  PolynomialFitResult fit{};
+  if (x.size() != y.size() || x.empty()) {
+    return fit;
+  }
+  const std::size_t n = x.size();
+  const std::size_t d = degree;
+  if (d + 1 > n) {
+    return fit;
+  }
+  std::vector<double> sx(2 * d + 1, 0.0);
+  for (std::size_t p = 0; p <= 2 * d; ++p) {
+    for (std::size_t i = 0; i < n; ++i) {
+      sx[p] += std::pow(x[i], static_cast<int>(p));
+    }
+  }
+  std::vector<std::vector<double>> a(d + 1, std::vector<double>(d + 1, 0.0));
+  std::vector<double> b(d + 1, 0.0);
+  for (std::size_t r = 0; r <= d; ++r) {
+    for (std::size_t c = 0; c <= d; ++c) {
+      a[r][c] = sx[r + c];
+    }
+    for (std::size_t i = 0; i < n; ++i) {
+      b[r] += y[i] * std::pow(x[i], static_cast<int>(r));
+    }
+  }
+  if (!solve_linear_system(a, b)) {
+    return fit;
+  }
+  fit.coeffs = b;
+
+  const double y_mean = std::accumulate(y.begin(), y.end(), 0.0) / static_cast<double>(n);
+  double ss_tot = 0.0;
+  double ss_res = 0.0;
+  for (std::size_t i = 0; i < n; ++i) {
+    const double yh = eval_poly(fit.coeffs, x[i]);
+    const double dt = y[i] - y_mean;
+    const double dr = y[i] - yh;
+    ss_tot += dt * dt;
+    ss_res += dr * dr;
+  }
+  fit.r2 = ss_tot > 0.0 ? std::max(0.0, 1.0 - ss_res / ss_tot) : 0.0;
+  return fit;
+}
+
+std::vector<double> polynomial_fit_line(const PolynomialFitResult& fit,
+                                        std::span<const double> x) {
+  std::vector<double> yhat(x.size(), 0.0);
+  for (std::size_t i = 0; i < x.size(); ++i) {
+    yhat[i] = eval_poly(fit.coeffs, x[i]);
   }
   return yhat;
 }

@@ -18,4 +18,21 @@ LinearFitResult add_linear_fit_overlay(Axes& ax,
   return fit;
 }
 
+PolynomialFitResult add_polynomial_fit_overlay(Axes& ax,
+                                               std::span<const double> x,
+                                               std::span<const double> y,
+                                               const std::size_t degree,
+                                               const std::string& label) {
+  const auto fit = polynomial_fit(x, y, degree);
+  const auto yhat = polynomial_fit_line(fit, x);
+  SeriesSpec s;
+  s.label = label;
+  s.has_line_width = true;
+  s.line_width_pt = 1.6;
+  s.has_color = true;
+  s.color = "#d62728";
+  ax.add_series(s, x, yhat);
+  return fit;
+}
+
 }  // namespace gnuplotpp

@@ -121,10 +121,19 @@ int main() {
   assert(fit.r2 > 0.99);
   const auto yhat = linear_fit_line(fit, x);
   assert(yhat.size() == x.size());
+  const std::vector<double> xq{0.0, 1.0, 2.0, 3.0, 4.0};
+  const std::vector<double> yq{1.0, 2.0, 5.0, 10.0, 17.0};  // y = 1 + x^2
+  const auto pfit = polynomial_fit(xq, yq, 2);
+  assert(pfit.coeffs.size() == 3U);
+  assert(pfit.r2 > 0.999);
+  const auto yqhat = polynomial_fit_line(pfit, xq);
+  assert(yqhat.size() == xq.size());
   Figure fit_fig(spec);
   fit_fig.axes(0, 0).set(AxesSpec{});
   const auto fit_overlay = add_linear_fit_overlay(fit_fig.axes(0, 0), x, y, "fit");
   assert(fit_overlay.r2 > 0.99);
+  const auto pfit_overlay = add_polynomial_fit_overlay(fit_fig.axes(0, 0), xq, yq, 2, "poly2");
+  assert(pfit_overlay.coeffs.size() == 3U);
 
   std::vector<double> ex;
   std::vector<double> ep;

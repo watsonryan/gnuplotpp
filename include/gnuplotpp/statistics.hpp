@@ -1,6 +1,7 @@
 #pragma once
 
 #include <span>
+#include <string>
 #include <vector>
 
 namespace gnuplotpp {
@@ -116,6 +117,12 @@ struct LinearFitResult {
   double r2 = 0.0;
 };
 
+/** @brief Polynomial least-squares fit summary. */
+struct PolynomialFitResult {
+  std::vector<double> coeffs;  // c0 + c1*x + c2*x^2 + ...
+  double r2 = 0.0;
+};
+
 /**
  * @brief Compute boxplot summary using Tukey 1.5*IQR whiskers.
  * @param samples Input data.
@@ -154,5 +161,25 @@ LinearFitResult linear_fit(std::span<const double> x, std::span<const double> y)
  * @return Fitted y values.
  */
 std::vector<double> linear_fit_line(const LinearFitResult& fit, std::span<const double> x);
+
+/**
+ * @brief Fit polynomial y = c0 + c1*x + ... + cd*x^d.
+ * @param x X samples.
+ * @param y Y samples.
+ * @param degree Polynomial degree.
+ * @return Polynomial fit summary.
+ */
+PolynomialFitResult polynomial_fit(std::span<const double> x,
+                                   std::span<const double> y,
+                                   std::size_t degree);
+
+/**
+ * @brief Evaluate polynomial fit on x values.
+ * @param fit Polynomial coefficients.
+ * @param x X samples.
+ * @return Fitted y values.
+ */
+std::vector<double> polynomial_fit_line(const PolynomialFitResult& fit,
+                                        std::span<const double> x);
 
 }  // namespace gnuplotpp
