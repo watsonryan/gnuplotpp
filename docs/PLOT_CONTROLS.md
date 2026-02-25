@@ -117,6 +117,10 @@ for (int k = 0; k < 1000; ++k) {
 }
 ```
 
+Practical note:
+- For very large ensembles (e.g., 1000 lines), avoid high alpha like `0.3` with thick lines; overlap will saturate to near-black.
+- Start around `opacity=0.01..0.05` and adjust.
+
 ### 1) Single IEEE Plot (1x1)
 
 ```cpp

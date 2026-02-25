@@ -178,6 +178,7 @@ std::string with_clause(const SeriesData& series,
   const double line_width =
       series.spec.has_line_width ? series.spec.line_width_pt : style.line_width_pt;
   const bool ieee = is_ieee_preset(preset);
+  const bool use_ieee_dash = ieee && !series.spec.has_opacity;
   const int dt = static_cast<int>(series_idx % 7U) + 1;
   std::string color;
   if (series.spec.has_color) {
@@ -197,7 +198,7 @@ std::string with_clause(const SeriesData& series,
       if (!color.empty()) {
         os << " lc rgb '" << color << "'";
       }
-      if (ieee) {
+      if (use_ieee_dash) {
         os << " dt " << dt;
       }
       break;
@@ -212,7 +213,7 @@ std::string with_clause(const SeriesData& series,
       if (!color.empty()) {
         os << " lc rgb '" << color << "'";
       }
-      if (ieee) {
+      if (use_ieee_dash) {
         os << " dt " << dt;
       }
       break;
@@ -221,7 +222,7 @@ std::string with_clause(const SeriesData& series,
       if (!color.empty()) {
         os << " lc rgb '" << color << "'";
       }
-      if (ieee) {
+      if (use_ieee_dash) {
         os << " dt " << dt;
       }
       break;
