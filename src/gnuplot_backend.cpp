@@ -152,7 +152,9 @@ void emit_plot_body(std::ostream& os,
   const double title_font_pt = ieee ? 8.5 : spec.style.font_pt;
 
   os << "set border linewidth 0.5 linecolor rgb '#222222'\n";
-  os << "set tics in mirror scale 0.5,0.25\n";
+  os << "set tics in nomirror scale 0.5,0.25\n";
+  os << "unset x2tics\n";
+  os << "unset y2tics\n";
   os << "set mxtics 2\n";
   os << "set mytics 2\n";
   os << "set xtics font '" << esc(spec.style.font) << "," << tick_font_pt << "'\n";
