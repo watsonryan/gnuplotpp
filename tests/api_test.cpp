@@ -48,7 +48,21 @@ int main() {
   }
   assert(threw);
 
-  assert(fig.axes(0, 0).series().size() == 1U);
+  const std::vector<double> y_lo{0.8, 1.6, 2.4};
+  const std::vector<double> y_hi{1.2, 2.4, 3.6};
+  fig.axes(0, 0).add_band(SeriesSpec{.label = "band"}, x, y_lo, y_hi);
+  fig.axes(0, 0).add_histogram(SeriesSpec{.label = "hist"}, x, y);
+  fig.axes(0, 0).add_heatmap(SeriesSpec{.label = "hm"}, x, y, y);
+
+  assert(fig.axes(0, 0).series().size() == 4U);
+  assert(fig.axes(0, 0).series()[1].spec.type == SeriesType::Band);
+  assert(fig.axes(0, 0).series()[2].spec.type == SeriesType::Histogram);
+  assert(fig.axes(0, 0).series()[3].spec.type == SeriesType::Heatmap);
+
+  apply_style_profile(spec, StyleProfile::Presentation);
+  assert(spec.palette == ColorPalette::Viridis);
+  assert(spec.style.font_pt >= 12.0);
+
   const auto no_backend = fig.save("out");
   assert(!no_backend.ok);
   assert(no_backend.status == RenderStatus::InvalidInput);

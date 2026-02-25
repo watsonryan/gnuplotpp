@@ -17,6 +17,12 @@ namespace gnuplotpp {
 /** @brief Output file formats supported by the renderer. */
 enum class OutputFormat { Pdf, Svg, Eps, Png };
 
+/** @brief Figure-wide palette selection for automatic series colors. */
+enum class ColorPalette { Default, Tab10, Viridis, Grayscale };
+
+/** @brief Text rendering mode used by terminal setup. */
+enum class TextMode { Enhanced, Plain, LaTeX };
+
 /** @brief Built-in publication presets for size and style defaults. */
 enum class Preset {
   IEEE_SingleColumn,
@@ -46,10 +52,64 @@ struct FigureSpec {
   Preset preset = Preset::IEEE_SingleColumn;
   FigureSizeInches size{};
   Style style{};
+  ColorPalette palette = ColorPalette::Default;
+  TextMode text_mode = TextMode::Enhanced;
   int rows = 1;
   int cols = 1;
   std::vector<OutputFormat> formats{OutputFormat::Pdf};
   std::string title;
+  bool write_manifest = false;
+};
+
+/** @brief Legend placement presets. */
+enum class LegendPosition {
+  TopRight,
+  TopLeft,
+  BottomRight,
+  BottomLeft,
+  OutsideRight,
+  OutsideBottom
+};
+
+/** @brief Legend configuration for one axes. */
+struct LegendSpec {
+  bool enabled = true;
+  LegendPosition position = LegendPosition::TopRight;
+  int columns = 1;
+  bool boxed = false;
+  bool opaque = false;
+  bool has_font_pt = false;
+  double font_pt = 8.0;
+};
+
+/** @brief Typed label annotation. */
+struct LabelAnnotation {
+  std::string text;
+  std::string at = "graph 0.05,0.95";
+  std::string font;
+  bool front = true;
+};
+
+/** @brief Typed arrow annotation. */
+struct ArrowAnnotation {
+  std::string from = "graph 0.1,0.9";
+  std::string to = "graph 0.2,0.8";
+  bool heads = true;
+  double line_width_pt = 1.0;
+  std::string color = "#000000";
+  bool front = true;
+};
+
+/** @brief Typed rectangle object for highlights/masks. */
+struct RectObject {
+  std::string from = "graph 0.1,0.1";
+  std::string to = "graph 0.2,0.2";
+  bool has_fill_opacity = false;
+  double fill_opacity = 0.15;
+  std::string fill_color = "#000000";
+  bool border = false;
+  std::string border_color = "#000000";
+  bool front = false;
 };
 
 /** @brief Axes-level labels, limits, and grid/log controls. */
@@ -59,6 +119,7 @@ struct AxesSpec {
   std::string ylabel;
   bool grid = false;
   bool legend = true;
+  LegendSpec legend_spec{};
 
   bool has_xlim = false;
   double xmin = 0.0;
@@ -71,12 +132,27 @@ struct AxesSpec {
   bool xlog = false;
   bool ylog = false;
 
+  bool has_xtick_step = false;
+  double xtick_step = 1.0;
+  bool has_ytick_step = false;
+  double ytick_step = 1.0;
+  bool has_xminor_count = false;
+  int xminor_count = 2;
+  bool has_yminor_count = false;
+  int yminor_count = 2;
+  std::string xformat;
+  std::string yformat;
+
+  std::vector<LabelAnnotation> labels;
+  std::vector<ArrowAnnotation> arrows;
+  std::vector<RectObject> rectangles;
+
   // Optional raw gnuplot commands for advanced annotations (arrows/labels/etc).
   std::vector<std::string> gnuplot_commands;
 };
 
 /** @brief Supported series drawing types. */
-enum class SeriesType { Line, Scatter, ErrorBars, Band };
+enum class SeriesType { Line, Scatter, ErrorBars, Band, Histogram, Heatmap };
 
 /** @brief Series metadata and optional per-series style override. */
 struct SeriesSpec {
@@ -100,6 +176,8 @@ struct SeriesData {
   SeriesSpec spec;
   std::vector<double> x;
   std::vector<double> y;
+  std::vector<double> y2;
+  std::vector<double> z;
 };
 
 /**
@@ -123,6 +201,43 @@ public:
   void add_series(const SeriesSpec& spec,
                   std::span<const double> x,
                   std::span<const double> y);
+
+  /**
+   * @brief Add a confidence band from lower/upper curves.
+   * @param spec Series style metadata.
+   * @param x X samples.
+   * @param y_low Lower bound values.
+   * @param y_high Upper bound values.
+   * @throws std::invalid_argument if lengths differ.
+   */
+  void add_band(const SeriesSpec& spec,
+                std::span<const double> x,
+                std::span<const double> y_low,
+                std::span<const double> y_high);
+
+  /**
+   * @brief Add a histogram-style series from bin centers and counts.
+   * @param spec Series metadata.
+   * @param bin_centers Histogram bin centers.
+   * @param counts Histogram values.
+   * @throws std::invalid_argument if lengths differ.
+   */
+  void add_histogram(const SeriesSpec& spec,
+                     std::span<const double> bin_centers,
+                     std::span<const double> counts);
+
+  /**
+   * @brief Add heatmap samples as x/y/z triplets.
+   * @param spec Series metadata.
+   * @param x X coordinates.
+   * @param y Y coordinates.
+   * @param z Intensity values.
+   * @throws std::invalid_argument if lengths differ.
+   */
+  void add_heatmap(const SeriesSpec& spec,
+                   std::span<const double> x,
+                   std::span<const double> y,
+                   std::span<const double> z);
 
   /** @return Current axes configuration. */
   const AxesSpec& spec() const { return spec_; }

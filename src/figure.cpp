@@ -23,6 +23,64 @@ void Axes::add_series(const SeriesSpec& spec,
   series_.push_back(std::move(data));
 }
 
+void Axes::add_band(const SeriesSpec& spec,
+                    std::span<const double> x,
+                    std::span<const double> y_low,
+                    std::span<const double> y_high) {
+  if (x.size() != y_low.size() || x.size() != y_high.size()) {
+    throw std::invalid_argument("x, y_low, and y_high must have the same length");
+  }
+  SeriesSpec band_spec = spec;
+  band_spec.type = SeriesType::Band;
+  if (band_spec.has_opacity && (band_spec.opacity < 0.0 || band_spec.opacity > 1.0)) {
+    throw std::invalid_argument("series opacity must be in [0, 1]");
+  }
+  SeriesData data;
+  data.spec = band_spec;
+  data.x.assign(x.begin(), x.end());
+  data.y.assign(y_low.begin(), y_low.end());
+  data.y2.assign(y_high.begin(), y_high.end());
+  series_.push_back(std::move(data));
+}
+
+void Axes::add_histogram(const SeriesSpec& spec,
+                         std::span<const double> bin_centers,
+                         std::span<const double> counts) {
+  if (bin_centers.size() != counts.size()) {
+    throw std::invalid_argument("bin_centers and counts must have the same length");
+  }
+  SeriesSpec hist_spec = spec;
+  hist_spec.type = SeriesType::Histogram;
+  if (hist_spec.has_opacity && (hist_spec.opacity < 0.0 || hist_spec.opacity > 1.0)) {
+    throw std::invalid_argument("series opacity must be in [0, 1]");
+  }
+  SeriesData data;
+  data.spec = hist_spec;
+  data.x.assign(bin_centers.begin(), bin_centers.end());
+  data.y.assign(counts.begin(), counts.end());
+  series_.push_back(std::move(data));
+}
+
+void Axes::add_heatmap(const SeriesSpec& spec,
+                       std::span<const double> x,
+                       std::span<const double> y,
+                       std::span<const double> z) {
+  if (x.size() != y.size() || x.size() != z.size()) {
+    throw std::invalid_argument("x, y, and z must have the same length");
+  }
+  SeriesSpec hm_spec = spec;
+  hm_spec.type = SeriesType::Heatmap;
+  if (hm_spec.has_opacity && (hm_spec.opacity < 0.0 || hm_spec.opacity > 1.0)) {
+    throw std::invalid_argument("series opacity must be in [0, 1]");
+  }
+  SeriesData data;
+  data.spec = hm_spec;
+  data.x.assign(x.begin(), x.end());
+  data.y.assign(y.begin(), y.end());
+  data.z.assign(z.begin(), z.end());
+  series_.push_back(std::move(data));
+}
+
 Figure::Figure(FigureSpec spec) : spec_(std::move(spec)) {
   if (spec_.rows <= 0 || spec_.cols <= 0) {
     throw std::invalid_argument("rows and cols must be positive");

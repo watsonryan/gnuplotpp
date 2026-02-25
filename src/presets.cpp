@@ -61,7 +61,47 @@ void apply_preset_defaults(FigureSpec& spec,
 
   if ((spec.preset == Preset::AIAA_Column || spec.preset == Preset::AIAA_Page) &&
       spec.style.font_pt < 8.0) {
-    spec.style.font_pt = 8.0;
+      spec.style.font_pt = 8.0;
+  }
+}
+
+void apply_style_profile(FigureSpec& spec, StyleProfile profile) {
+  switch (profile) {
+    case StyleProfile::Science:
+      spec.style.font = "Times";
+      spec.style.font_pt = 9.0;
+      spec.style.line_width_pt = 1.5;
+      spec.style.grid = true;
+      spec.palette = ColorPalette::Tab10;
+      break;
+    case StyleProfile::IEEE_Strict:
+      spec.style.font = "Times";
+      spec.style.font_pt = 8.5;
+      spec.style.line_width_pt = 1.0;
+      spec.style.grid = false;
+      spec.palette = ColorPalette::Grayscale;
+      break;
+    case StyleProfile::AIAA_Strict:
+      spec.style.font = "Times";
+      spec.style.font_pt = 8.0;
+      spec.style.line_width_pt = 1.0;
+      spec.style.grid = false;
+      spec.palette = ColorPalette::Default;
+      break;
+    case StyleProfile::Presentation:
+      spec.style.font = "Helvetica";
+      spec.style.font_pt = 12.0;
+      spec.style.line_width_pt = 2.0;
+      spec.style.grid = true;
+      spec.palette = ColorPalette::Viridis;
+      break;
+    case StyleProfile::DarkPrintSafe:
+      spec.style.font = "Times";
+      spec.style.font_pt = 9.0;
+      spec.style.line_width_pt = 1.6;
+      spec.style.grid = true;
+      spec.palette = ColorPalette::Grayscale;
+      break;
   }
 }
 
