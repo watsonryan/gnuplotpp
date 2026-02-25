@@ -56,6 +56,7 @@ int main() {
   const auto result = fig.save(out_dir);
 
   assert(!result.ok);
+  assert(result.status == RenderStatus::ExternalToolMissing);
   assert(std::filesystem::exists(result.script_path));
 
   const auto script = read_file(result.script_path);

@@ -126,8 +126,19 @@ private:
 class Figure;
 
 /** @brief Backend render status and generated output paths. */
+enum class RenderStatus {
+  Success,
+  InvalidInput,
+  IoError,
+  ExternalToolMissing,
+  ExternalToolFailure,
+  UnsupportedFormat
+};
+
+/** @brief Backend render status and generated output paths. */
 struct RenderResult {
   bool ok = true;
+  RenderStatus status = RenderStatus::Success;
   std::string message;
   std::filesystem::path script_path;
   std::vector<std::filesystem::path> outputs;

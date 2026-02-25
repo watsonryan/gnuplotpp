@@ -6,10 +6,19 @@
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
+#include <iostream>
 #include <limits>
 #include <sstream>
 #include <string>
 #include <utility>
+
+#ifdef GNUPLOTPP_HAS_FMT
+#include <fmt/format.h>
+#endif
+
+#ifdef GNUPLOTPP_HAS_SPDLOG
+#include <spdlog/spdlog.h>
+#endif
 
 namespace gnuplotpp {
 namespace {
@@ -111,16 +120,43 @@ double safe_value(const double v, const double fallback = 0.0) {
   return std::isfinite(v) ? v : fallback;
 }
 
+std::string msg_text(const std::string& prefix, const std::string& detail) {
+#ifdef GNUPLOTPP_HAS_FMT
+  return fmt::format("{}: {}", prefix, detail);
+#else
+  return prefix + ": " + detail;
+#endif
+}
+
+void log_info(const std::string& msg) {
+#ifdef GNUPLOTPP_HAS_SPDLOG
+  spdlog::info("{}", msg);
+#else
+  std::clog << "[gnuplotpp] info: " << msg << "\n";
+#endif
+}
+
+void log_error(const std::string& msg) {
+#ifdef GNUPLOTPP_HAS_SPDLOG
+  spdlog::error("{}", msg);
+#else
+  std::cerr << "[gnuplotpp] error: " << msg << "\n";
+#endif
+}
+
 }  // namespace
 
 RenderResult SvgBackend::render(const Figure& fig,
                                 const std::filesystem::path& out_dir) {
   RenderResult result;
+  result.status = RenderStatus::Success;
   std::error_code ec;
   std::filesystem::create_directories(out_dir, ec);
   if (ec) {
     result.ok = false;
-    result.message = "failed to create output directory: " + ec.message();
+    result.status = RenderStatus::IoError;
+    result.message = msg_text("failed to create output directory", ec.message());
+    log_error(result.message);
     return result;
   }
 
@@ -134,7 +170,9 @@ RenderResult SvgBackend::render(const Figure& fig,
   }
   if (!requested_svg) {
     result.ok = false;
+    result.status = RenderStatus::UnsupportedFormat;
     result.message = "SvgBackend only supports OutputFormat::Svg";
+    log_error(result.message);
     return result;
   }
 
@@ -261,11 +299,27 @@ RenderResult SvgBackend::render(const Figure& fig,
 
   const auto out_path = out_dir / "figure.svg";
   std::ofstream out(out_path);
+  if (!out.is_open()) {
+    result.ok = false;
+    result.status = RenderStatus::IoError;
+    result.message = msg_text("failed to open svg output for writing", out_path.string());
+    log_error(result.message);
+    return result;
+  }
   out << svg.str();
+  if (!out.good()) {
+    result.ok = false;
+    result.status = RenderStatus::IoError;
+    result.message = msg_text("failed while writing svg output", out_path.string());
+    log_error(result.message);
+    return result;
+  }
 
   result.ok = true;
+  result.status = RenderStatus::Success;
   result.message = "native svg render completed";
   result.outputs.push_back(out_path);
+  log_info(result.message);
   return result;
 }
 

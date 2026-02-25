@@ -4,15 +4,60 @@
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
+#include <iostream>
 #include <sstream>
 #include <string>
 #include <utility>
+
+#ifdef GNUPLOTPP_HAS_FMT
+#include <fmt/format.h>
+#endif
+
+#ifdef GNUPLOTPP_HAS_SPDLOG
+#include <spdlog/spdlog.h>
+#endif
 
 namespace gnuplotpp {
 namespace {
 
 std::string quote(const std::filesystem::path& p) {
   return "'" + p.string() + "'";
+}
+
+std::string msg_io(const std::string& prefix,
+                   const std::filesystem::path& path,
+                   const std::error_code& ec) {
+#ifdef GNUPLOTPP_HAS_FMT
+  return fmt::format("{} '{}': {}", prefix, path.string(), ec.message());
+#else
+  std::ostringstream os;
+  os << prefix << " '" << path.string() << "': " << ec.message();
+  return os.str();
+#endif
+}
+
+std::string msg_text(const std::string& prefix, const std::string& detail) {
+#ifdef GNUPLOTPP_HAS_FMT
+  return fmt::format("{}: {}", prefix, detail);
+#else
+  return prefix + ": " + detail;
+#endif
+}
+
+void log_info(const std::string& msg) {
+#ifdef GNUPLOTPP_HAS_SPDLOG
+  spdlog::info("{}", msg);
+#else
+  std::clog << "[gnuplotpp] info: " << msg << "\n";
+#endif
+}
+
+void log_error(const std::string& msg) {
+#ifdef GNUPLOTPP_HAS_SPDLOG
+  spdlog::error("{}", msg);
+#else
+  std::cerr << "[gnuplotpp] error: " << msg << "\n";
+#endif
 }
 
 std::string extension_for(OutputFormat format) {
@@ -166,12 +211,15 @@ GnuplotBackend::GnuplotBackend(std::string executable)
 RenderResult GnuplotBackend::render(const Figure& fig,
                                     const std::filesystem::path& out_dir) {
   RenderResult result;
+  result.status = RenderStatus::Success;
 
   std::error_code ec;
   std::filesystem::create_directories(out_dir / "tmp", ec);
   if (ec) {
     result.ok = false;
-    result.message = "failed to create output directories: " + ec.message();
+    result.status = RenderStatus::IoError;
+    result.message = msg_io("failed to create output directories", out_dir / "tmp", ec);
+    log_error(result.message);
     return result;
   }
 
@@ -190,9 +238,23 @@ RenderResult GnuplotBackend::render(const Figure& fig,
 
       const auto& series = axis.series()[series_idx];
       std::ofstream data_os(data_path);
+      if (!data_os.is_open()) {
+        result.ok = false;
+        result.status = RenderStatus::IoError;
+        result.message = msg_text("failed to open data file for writing", data_path.string());
+        log_error(result.message);
+        return result;
+      }
       data_os << std::scientific << std::setprecision(16);
       for (std::size_t i = 0; i < series.x.size(); ++i) {
         data_os << series.x[i] << " " << series.y[i] << "\n";
+      }
+      if (!data_os.good()) {
+        result.ok = false;
+        result.status = RenderStatus::IoError;
+        result.message = msg_text("failed while writing data file", data_path.string());
+        log_error(result.message);
+        return result;
       }
     }
   }
@@ -201,6 +263,13 @@ RenderResult GnuplotBackend::render(const Figure& fig,
   result.script_path = script_path;
 
   std::ofstream script_os(script_path);
+  if (!script_os.is_open()) {
+    result.ok = false;
+    result.status = RenderStatus::IoError;
+    result.message = msg_text("failed to open gnuplot script for writing", script_path.string());
+    log_error(result.message);
+    return result;
+  }
   script_os << "set encoding utf8\n";
 
   for (const auto format : fig.spec().formats) {
@@ -212,23 +281,44 @@ RenderResult GnuplotBackend::render(const Figure& fig,
     emit_plot_body(script_os, fig, data_files);
     script_os << "set output\n";
   }
+  if (!script_os.good()) {
+    result.ok = false;
+    result.status = RenderStatus::IoError;
+    result.message = msg_text("failed while writing gnuplot script", script_path.string());
+    log_error(result.message);
+    return result;
+  }
 
   const std::string check_cmd = "command -v " + executable_ + " >/dev/null 2>&1";
   if (std::system(check_cmd.c_str()) != 0) {
     result.ok = false;
-    result.message = "gnuplot executable not found; generated script/data only";
+    result.status = RenderStatus::ExternalToolMissing;
+    result.message = msg_text("gnuplot executable not found; generated script/data only",
+                              executable_);
+    log_error(result.message);
     return result;
   }
 
-  const std::string render_cmd = executable_ + " " + script_path.string() + " >/tmp/gnuplotpp.log 2>&1";
-  if (std::system(render_cmd.c_str()) != 0) {
+  const std::string render_cmd =
+      executable_ + " " + quote(script_path) + " >/tmp/gnuplotpp.log 2>&1";
+  const int rc = std::system(render_cmd.c_str());
+  if (rc != 0) {
     result.ok = false;
+    result.status = RenderStatus::ExternalToolFailure;
+#ifdef GNUPLOTPP_HAS_FMT
+    result.message =
+        fmt::format("gnuplot failed (exit={}); inspect /tmp/gnuplotpp.log", rc);
+#else
     result.message = "gnuplot failed; inspect /tmp/gnuplotpp.log";
+#endif
+    log_error(result.message);
     return result;
   }
 
   result.ok = true;
+  result.status = RenderStatus::Success;
   result.message = "render completed";
+  log_info(result.message);
   return result;
 }
 

@@ -53,13 +53,21 @@ sequenceDiagram
 ## CPM Dependencies (inside CMake)
 
 CPM is optional via `GNUPLOTPP_ENABLE_CPM=ON`.
-When enabled, CMake downloads `CPM.cmake` and resolves C++ libraries (currently `nlohmann_json`).
+When enabled, CMake downloads `CPM.cmake` and resolves C++ libraries (`nlohmann_json`, `fmt`, `spdlog`).
+If network/package resolution fails, configuration now degrades with warnings and continues.
 
 ## Gnuplot and CPM
 
 - CPM is best for CMake/C++ dependencies.
 - `gnuplot` is an external CLI renderer.
 - Recommended: install `gnuplot` with system package managers and keep CPM for C++ libs.
+
+## Logging and Error Handling
+
+- `RenderResult` includes `RenderStatus` (`Success`, `InvalidInput`, `IoError`, `ExternalToolMissing`, `ExternalToolFailure`, `UnsupportedFormat`).
+- Backends emit detailed file/tool failure messages and return explicit statuses.
+- If `fmt` and `spdlog` are available (via CPM or system packages), the library uses them for structured formatting/logging.
+- If not available, behavior falls back to standard C++ streams with the same status semantics.
 
 ## No Separate Plot Command
 

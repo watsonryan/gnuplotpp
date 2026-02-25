@@ -51,6 +51,7 @@ int main() {
   const auto result = fig.save(out_dir);
 
   assert(result.ok);
+  assert(result.status == RenderStatus::Success);
   assert(!result.outputs.empty());
   assert(std::filesystem::exists(result.outputs.front()));
 

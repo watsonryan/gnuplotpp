@@ -10,7 +10,8 @@ namespace {
 class DummyBackend final : public gnuplotpp::IPlotBackend {
 public:
   gnuplotpp::RenderResult render(const gnuplotpp::Figure&, const std::filesystem::path&) override {
-    return gnuplotpp::RenderResult{.ok = true, .message = "ok"};
+    return gnuplotpp::RenderResult{
+        .ok = true, .status = gnuplotpp::RenderStatus::Success, .message = "ok"};
   }
 };
 
@@ -38,10 +39,14 @@ int main() {
   fig.axes(0, 0).add_series(SeriesSpec{.label = "line"}, x, y);
 
   assert(fig.axes(0, 0).series().size() == 1U);
-  assert(!fig.save("out").ok);
+  const auto no_backend = fig.save("out");
+  assert(!no_backend.ok);
+  assert(no_backend.status == RenderStatus::InvalidInput);
 
   fig.set_backend(std::make_shared<DummyBackend>());
-  assert(fig.save("out").ok);
+  const auto ok = fig.save("out");
+  assert(ok.ok);
+  assert(ok.status == RenderStatus::Success);
 
   return 0;
 }

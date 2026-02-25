@@ -44,6 +44,7 @@ Axes& Figure::axes(int idx) {
 RenderResult Figure::save(const std::filesystem::path& out_dir) const {
   if (!backend_) {
     return RenderResult{.ok = false,
+                        .status = RenderStatus::InvalidInput,
                         .message =
                             "No backend configured. Call set_backend() before save()."};
   }

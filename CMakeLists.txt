@@ -5,12 +5,18 @@ option(ENABLE_PLOTTING "Enable gnuplot rendering support" ON)
 option(BUILD_TESTING "Build tests" ON)
 option(BUILD_EXAMPLES "Build examples" ON)
 option(GNUPLOTPP_ENABLE_CPM "Enable CPM-managed external dependencies" OFF)
+option(GNUPLOTPP_ENABLE_LOGGING "Enable fmt/spdlog logging integration when available" ON)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 include(cmake/dependencies.cmake)
+
+if(GNUPLOTPP_ENABLE_LOGGING AND NOT GNUPLOTPP_ENABLE_CPM)
+  find_package(fmt CONFIG QUIET)
+  find_package(spdlog CONFIG QUIET)
+endif()
 
 add_library(gnuplotpp
   src/figure.cpp
@@ -31,6 +37,24 @@ target_compile_features(gnuplotpp PUBLIC cxx_std_20)
 
 if(TARGET nlohmann_json::nlohmann_json)
   target_link_libraries(gnuplotpp PUBLIC nlohmann_json::nlohmann_json)
+endif()
+
+if(GNUPLOTPP_ENABLE_LOGGING)
+  if(TARGET fmt::fmt)
+    target_link_libraries(gnuplotpp PUBLIC fmt::fmt)
+    target_compile_definitions(gnuplotpp PUBLIC GNUPLOTPP_HAS_FMT=1)
+  elseif(TARGET fmt::fmt-header-only)
+    target_link_libraries(gnuplotpp PUBLIC fmt::fmt-header-only)
+    target_compile_definitions(gnuplotpp PUBLIC GNUPLOTPP_HAS_FMT=1)
+  endif()
+
+  if(TARGET spdlog::spdlog)
+    target_link_libraries(gnuplotpp PUBLIC spdlog::spdlog)
+    target_compile_definitions(gnuplotpp PUBLIC GNUPLOTPP_HAS_SPDLOG=1)
+  elseif(TARGET spdlog::spdlog_header_only)
+    target_link_libraries(gnuplotpp PUBLIC spdlog::spdlog_header_only)
+    target_compile_definitions(gnuplotpp PUBLIC GNUPLOTPP_HAS_SPDLOG=1)
+  endif()
 endif()
 
 if(BUILD_EXAMPLES)
