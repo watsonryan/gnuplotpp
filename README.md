@@ -71,6 +71,7 @@ When using `IEEE_SingleColumn` or `IEEE_DoubleColumn`, renderer behavior is tigh
 ```bash
 ./build/dev-debug/two_window_example --out out/two_window
 ./build/dev-debug/layout_2x2_example --out out/layout_2x2
+./build/dev-debug/three_line_ieee_example --out out/three_line_ieee
 ```
 
 Expected outputs:
@@ -80,6 +81,21 @@ Expected outputs:
 - `out/<name>/figures/figure.eps`
 - `out/<name>/figures/tmp/figure.gp`
 - `out/<name>/figures/tmp/ax*_series*.dat`
+
+### Axis Controls
+
+Set axis limits and log scale using `AxesSpec`:
+
+```cpp
+gnuplotpp::AxesSpec ax;
+ax.has_xlim = true;
+ax.xmin = 0.0;
+ax.xmax = 100.0;
+ax.has_ylim = true;
+ax.ymin = 1e-3;
+ax.ymax = 10.0;
+ax.ylog = true;
+```
 
 ## Error Handling
 
