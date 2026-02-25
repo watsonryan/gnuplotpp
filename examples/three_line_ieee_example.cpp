@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
           " font 'Times,8' front",
       "set arrow 1 from 18," + std::to_string(y_max_plot * 0.80) + " to " +
           std::to_string(x_target) + "," + std::to_string(y_target) +
-          " heads size screen 0.010,12,30 lw 1.0 lc rgb '#000000' front"};
+          " heads size screen 0.006,9,20 lw 0.8 lc rgb '#000000' front"};
   fig.axes(0).set(ax);
 
   fig.axes(0).add_series(SeriesSpec{.type = SeriesType::Line, .label = "SRIF"}, t, srif);
