@@ -54,7 +54,12 @@ int main(int argc, char** argv) {
   ax.xlabel = "t [s]";
   ax.ylabel = "x(t)";
   ax.grid = false;
-  ax.legend = false;
+  ax.legend = true;
+  ax.legend_spec.position = LegendPosition::TopLeft;
+  ax.legend_spec.boxed = true;
+  ax.legend_spec.opaque = true;
+  ax.legend_spec.has_font_pt = true;
+  ax.legend_spec.font_pt = 12.0;
   ax.has_xlim = true;
   ax.xmin = 0.0;
   ax.xmax = 22.0;
@@ -102,6 +107,7 @@ int main(int argc, char** argv) {
 
     SeriesSpec s;
     s.type = SeriesType::Line;
+    s.label = (k == 0) ? "MC run" : "";
     s.has_line_width = true;
     s.line_width_pt = line_width;
     s.has_color = true;
@@ -111,22 +117,24 @@ int main(int argc, char** argv) {
     fig.axes(0).add_series(s, t, y);
   }
 
-  fig.axes(0).add_series(SeriesSpec{.label = "",
+  fig.axes(0).add_series(SeriesSpec{.label = "3{/Symbol s} bound",
                                     .has_line_width = true,
                                     .line_width_pt = 2.0,
                                     .has_color = true,
-                                    .color = "#6d6d6d"},
+                                    .color = "#d62728",
+                                    .has_opacity = true,
+                                    .opacity = 1.0},
                          t,
                          sigma_upper);
   fig.axes(0).add_series(SeriesSpec{.label = "",
                                     .has_line_width = true,
                                     .line_width_pt = 2.0,
                                     .has_color = true,
-                                    .color = "#6d6d6d"},
+                                    .color = "#d62728",
+                                    .has_opacity = true,
+                                    .opacity = 1.0},
                          t,
                          sigma_lower);
-  ax.gnuplot_commands.push_back("set label 11 '+/-3{/Symbol s}' at graph 0.79,0.90 font 'Helvetica,13' tc rgb '#4a4a4a'");
-  fig.axes(0).set(ax);
 
   fig.set_backend(make_gnuplot_backend());
   const auto result = fig.save(out_dir / "figures");

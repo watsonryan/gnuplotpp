@@ -656,8 +656,12 @@ void emit_plot_body(std::ostream& os,
       const auto& series = axis.series()[s];
       os << quote(data_files[axis_idx][s]) << " " << using_clause(series) << " "
          << axes_clause(series) << " "
-         << with_clause(series, spec.style, spec.preset, spec.palette, s) << " title '"
-         << esc(series.spec.label) << "'";
+         << with_clause(series, spec.style, spec.preset, spec.palette, s) << " ";
+      if (series.spec.label.empty()) {
+        os << "notitle";
+      } else {
+        os << "title '" << esc(series.spec.label) << "'";
+      }
       if (s + 1 < axis.series().size()) {
         os << ", \\\n";
       } else {
