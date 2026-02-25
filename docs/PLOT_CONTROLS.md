@@ -14,6 +14,8 @@ This document is the full control reference for `gnuplotpp` plotting.
 - `gnuplotpp::save_theme_json` / `gnuplotpp::load_theme_json`
 - `gnuplotpp::read_csv_numeric`
 - `gnuplotpp::facet_grid` / `gnuplotpp::apply_facet_axes`
+- `gnuplotpp::load_yaml_figure_spec`
+- `gnuplotpp::apply_plot_template`
 
 ## Figure-Level Controls (`FigureSpec`)
 
@@ -34,6 +36,9 @@ fs.share_y = true;
 fs.hide_inner_tick_labels = true;
 fs.auto_layout = true;
 fs.interactive_preview = true; // emits tmp/interactive_preview.gp
+fs.panel_labels = true;
+fs.caption = "Figure caption text";
+fs.font_fallbacks = {"Helvetica", "Arial", "Times"};
 
 // Optional manual style override
 fs.style.font = "Times";
@@ -88,6 +93,14 @@ ax.y2log = false;
 ax.has_y2lim = true;
 ax.y2min = 0.0;
 ax.y2max = 1.0;
+ax.color_map = gnuplotpp::ColorMap::Cividis;
+ax.color_norm = gnuplotpp::ColorNorm::Linear;
+ax.colorbar_label = "density";
+ax.has_cbrange = true;
+ax.cbmin = 0.0;
+ax.cbmax = 1.0;
+ax.has_cbtick_step = true;
+ax.cbtick_step = 0.1;
 
 // Tick/format controls
 ax.has_xtick_step = true;
@@ -156,6 +169,14 @@ gnuplotpp::fan_chart_bands(ensemble, {0.1, 0.25, 0.75, 0.9}, fan_lo, fan_hi);
 
 std::vector<double> vy, vw;
 gnuplotpp::violin_profile(samples, vy, vw, 120);
+
+std::vector<double> q_theory, q_sample;
+gnuplotpp::qq_plot_normal(samples, q_theory, q_sample);
+
+auto box = gnuplotpp::box_summary(samples);
+
+std::vector<double> ell_x, ell_y;
+gnuplotpp::confidence_ellipse(x, y, 2.0, ell_x, ell_y, 200);
 ```
 
 ### CSV + Faceting
@@ -170,6 +191,16 @@ gnuplotpp::AxesSpec base;
 base.xlabel = gnuplotpp::label_with_unit("time", "s");
 base.ylabel = gnuplotpp::label_with_unit("error", "m");
 gnuplotpp::apply_facet_axes(fig, base, {"A","B","C","D","E","F"});
+```
+
+### YAML Figure Spec
+
+```cpp
+auto ys = gnuplotpp::load_yaml_figure_spec("figure.yaml");
+gnuplotpp::Figure fig(ys.figure);
+if (!ys.axes.empty()) {
+  fig.axes(0).set(ys.axes[0]);
+}
 ```
 
 ## Data and Rendering
@@ -296,3 +327,4 @@ ax.gnuplot_commands = {
 - `examples/monte_carlo_alpha_example.cpp`
 - `examples/feature_rich_showcase.cpp`
 - `examples/interactive_facet_example.cpp`
+- `examples/yaml_spec_example.cpp`

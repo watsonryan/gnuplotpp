@@ -8,9 +8,11 @@ Pure C++20 plotting API with a gnuplot renderer for figures.
 - Secondary-axis (`y2`) series support
 - Shared-axis layout controls for multi-panel figures
 - Interactive preview script generation (`interactive_preview`)
+- Panel labels + figure caption metadata (`panel_labels`, `caption`)
 - Confidence bands (`add_band`)
 - Histogram, KDE, ECDF, percentile-band, and heatmap helpers
 - Fan-chart and violin uncertainty helpers
+- QQ plot, box summary, and confidence ellipse helpers
 - Rich legend controls (position, columns, box, opacity, font)
 - Tick/format controls (major step, minor count, format strings)
 - Text mode selection (`Enhanced`, `Plain`, `LaTeX` toggle)
@@ -22,6 +24,9 @@ Pure C++20 plotting API with a gnuplot renderer for figures.
 - Data transforms (`moving_average`, `downsample_uniform`, `autocorrelation`)
 - CSV ingestion and unit-aware labels (`read_csv_numeric`, `label_with_unit`)
 - Faceting helpers (`facet_grid`, `apply_facet_axes`)
+- YAML declarative spec loading (`load_yaml_figure_spec`)
+- Template gallery and quick templates (`apply_plot_template`, `write_template_gallery_yaml`)
+- Font fallback chain for cross-format typography consistency
 - Reproducibility manifest export (`manifest.json`)
 
 ## Requirements
@@ -98,6 +103,7 @@ When using `IEEE_SingleColumn` or `IEEE_DoubleColumn`, renderer behavior is tigh
 ./build/dev-debug/monte_carlo_alpha_example --out out/monte_carlo_alpha
 ./build/dev-debug/feature_rich_showcase --out out/feature_rich_showcase
 ./build/dev-debug/interactive_facet_example --out out/interactive_facet_example
+./build/dev-debug/yaml_spec_example --out out/yaml_spec_example
 ```
 
 ### Annotated IEEE Example
