@@ -1,8 +1,10 @@
 #include "gnuplotpp/gnuplot_backend.hpp"
+#include "gnuplotpp/builder.hpp"
 #include "gnuplotpp/logging.hpp"
 #include "gnuplotpp/plot.hpp"
 #include "gnuplotpp/presets.hpp"
 #include "gnuplotpp/statistics.hpp"
+#include "gnuplotpp/theme.hpp"
 
 #include <cmath>
 #include <filesystem>
@@ -22,15 +24,25 @@ int main(int argc, char** argv) {
   }
 
   FigureSpec fs;
-  fs.preset = Preset::IEEE_DoubleColumn;
+  fs.preset = Preset::IEEE_Tran;
   apply_preset_defaults(fs);
   apply_style_profile(fs, StyleProfile::Science);
-  fs.rows = 2;
-  fs.cols = 2;
+  fs = FigureBuilder(fs)
+           .title("Feature Showcase")
+           .layout(2, 2)
+           .formats({OutputFormat::Pdf, OutputFormat::Png, OutputFormat::Svg, OutputFormat::Eps})
+           .palette(ColorPalette::Tab10)
+           .shared_axes(true, true, true)
+           .manifest(true)
+           .spec();
   fs.formats = {OutputFormat::Pdf, OutputFormat::Png, OutputFormat::Svg, OutputFormat::Eps};
   fs.text_mode = TextMode::LaTeX;
-  fs.write_manifest = true;
-  fs.title = "Feature Showcase";
+
+  std::filesystem::create_directories(out_dir / "figures");
+  save_theme_json(out_dir / "figures" / "science_theme.json", fs);
+  FigureSpec loaded = fs;
+  load_theme_json(out_dir / "figures" / "science_theme.json", loaded);
+  fs = loaded;
 
   Figure fig(fs);
 
@@ -88,6 +100,13 @@ int main(int argc, char** argv) {
   center.has_line_width = true;
   center.line_width_pt = 1.7;
   fig.axes(0).add_series(center, t, mean);
+  std::vector<double> e_low(200, 0.08);
+  std::vector<double> e_high(200, 0.12);
+  fig.axes(0).add_errorbars_asymmetric(SeriesSpec{.label = "obs", .has_color = true, .color = "#444444"},
+                                       t,
+                                       mean,
+                                       e_low,
+                                       e_high);
 
   AxesSpec ax1;
   ax1.title = "Histogram";
@@ -133,6 +152,10 @@ int main(int argc, char** argv) {
                          bins,
                          kde_scaled);
 
+  std::vector<double> ecdf_x;
+  std::vector<double> ecdf_p;
+  ecdf(samples, ecdf_x, ecdf_p);
+
   AxesSpec ax2;
   ax2.title = "Heatmap Samples";
   ax2.xlabel = "x";
@@ -155,7 +178,7 @@ int main(int argc, char** argv) {
   fig.axes(2).add_heatmap(SeriesSpec{.label = "density"}, hx, hy, hz);
 
   AxesSpec ax3;
-  ax3.title = "Legend + Tick Controls";
+  ax3.title = "Legend + Tick + y2";
   ax3.xlabel = "t [s]";
   ax3.ylabel = "value";
   ax3.grid = true;
@@ -169,6 +192,11 @@ int main(int argc, char** argv) {
   ax3.xminor_count = 4;
   ax3.xformat = "%.1f";
   ax3.yformat = "%.2f";
+  ax3.y2label = "p(x)";
+  ax3.y2log = false;
+  ax3.has_y2lim = true;
+  ax3.y2min = 0.0;
+  ax3.y2max = 1.0;
   fig.axes(3).set(ax3);
 
   std::vector<double> y1(200);
@@ -179,6 +207,9 @@ int main(int argc, char** argv) {
   }
   fig.axes(3).add_series(SeriesSpec{.label = "cos"}, t, y1);
   fig.axes(3).add_series(SeriesSpec{.label = "sin"}, t, y2);
+  fig.axes(3).add_series(SeriesSpec{.label = "ECDF", .use_y2 = true, .has_line_width = true, .line_width_pt = 1.3},
+                         ecdf_x,
+                         ecdf_p);
 
   fig.set_backend(make_gnuplot_backend());
   const auto result = fig.save(out_dir / "figures");

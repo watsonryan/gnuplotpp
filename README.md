@@ -5,13 +5,19 @@ Pure C++20 plotting API with a gnuplot renderer for figures.
 ## New Capability Set
 
 - Palette/color-cycle API (`Default`, `Tab10`, `Viridis`, `Grayscale`)
+- Secondary-axis (`y2`) series support
+- Shared-axis layout controls for multi-panel figures
 - Confidence bands (`add_band`)
-- Histogram, KDE, and heatmap helpers (`add_histogram`, `gaussian_kde`, `add_heatmap`)
+- Histogram, KDE, ECDF, percentile-band, and heatmap helpers
 - Rich legend controls (position, columns, box, opacity, font)
 - Tick/format controls (major step, minor count, format strings)
 - Text mode selection (`Enhanced`, `Plain`, `LaTeX` toggle)
+- Journal-like presets (`IEEE_Tran`, `Nature_1Col`, `Elsevier_1Col`)
 - Style profiles (`Science`, `IEEE_Strict`, `AIAA_Strict`, `Presentation`, `DarkPrintSafe`)
 - Typed annotations/objects (labels, arrows, rectangles)
+- Fluent `FigureBuilder` API
+- Theme JSON save/load (`save_theme_json` / `load_theme_json`)
+- Data transforms (`moving_average`, `downsample_uniform`, `autocorrelation`)
 - Reproducibility manifest export (`manifest.json`)
 
 ## Requirements

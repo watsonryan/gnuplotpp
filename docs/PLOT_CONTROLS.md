@@ -10,6 +10,8 @@ This document is the full control reference for `gnuplotpp` plotting.
 - `gnuplotpp::Figure`
 - `gnuplotpp::Axes`
 - `gnuplotpp::gaussian_kde`
+- `gnuplotpp::FigureBuilder`
+- `gnuplotpp::save_theme_json` / `gnuplotpp::load_theme_json`
 
 ## Figure-Level Controls (`FigureSpec`)
 
@@ -25,6 +27,9 @@ fs.formats = {gnuplotpp::OutputFormat::Pdf,
 fs.palette = gnuplotpp::ColorPalette::Tab10;
 fs.text_mode = gnuplotpp::TextMode::Enhanced; // Enhanced, Plain, LaTeX
 fs.write_manifest = true; // emits out/.../manifest.json
+fs.share_x = true;
+fs.share_y = true;
+fs.hide_inner_tick_labels = true;
 
 // Optional manual style override
 fs.style.font = "Times";
@@ -54,6 +59,7 @@ gnuplotpp::AxesSpec ax;
 ax.title = "Position Error Norm";
 ax.xlabel = "t [s]";
 ax.ylabel = "||e_p|| [m]";
+ax.y2label = "aux metric";
 ax.grid = true;
 ax.legend = true;
 ax.legend_spec.position = gnuplotpp::LegendPosition::TopRight;
@@ -74,6 +80,10 @@ ax.ymax = 20.0;
 // Log scales
 ax.xlog = false;
 ax.ylog = true;
+ax.y2log = false;
+ax.has_y2lim = true;
+ax.y2min = 0.0;
+ax.y2max = 1.0;
 
 // Tick/format controls
 ax.has_xtick_step = true;
@@ -128,6 +138,14 @@ fig.axes(0).add_heatmap(spec_heat, x, y, z);
 
 auto kde = gnuplotpp::gaussian_kde(samples, bins);
 fig.axes(0).add_series({.label="KDE"}, bins, kde);
+
+std::vector<double> ex, ep;
+gnuplotpp::ecdf(samples, ex, ep);
+fig.axes(0).add_series({.label="ECDF", .use_y2=true}, ex, ep);
+
+auto smoothed = gnuplotpp::moving_average(signal, 8);
+auto reduced = gnuplotpp::downsample_uniform(signal, 4);
+auto ac = gnuplotpp::autocorrelation(signal, 50);
 ```
 
 ## Data and Rendering
