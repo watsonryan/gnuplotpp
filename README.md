@@ -18,10 +18,12 @@ flowchart LR
   B --> C[IPlotBackend]
   C --> D[GnuplotBackend]
   C --> E[SvgBackend]
+  C --> J[PngBackend]
   D --> F[tmp/*.dat]
   D --> G[tmp/figure.gp]
   D --> H[figure.pdf|svg|eps|png]
   E --> I[figure.svg]
+  J --> K[figure.png]
 ```
 
 ## Render Flow
@@ -74,7 +76,8 @@ If network/package resolution fails, configuration now degrades with warnings an
 You run only the C++ executable.
 
 - If `gnuplot` exists, examples render publication outputs (`pdf/svg/png`) via `GnuplotBackend`.
-- If `gnuplot` is missing, examples automatically fall back to native `SvgBackend` and still generate `figure.svg`.
+- If `gnuplot` is missing, examples automatically fall back to native `PngBackend` and generate `figure.png`.
+- If PNG fallback fails, examples try native `SvgBackend` as a secondary fallback.
 
 ## Example Plots
 
@@ -85,4 +88,4 @@ You run only the C++ executable.
 
 Generated outputs include at least:
 
-- `out/<name>/figures/figure.svg`
+- `out/<name>/figures/figure.png`

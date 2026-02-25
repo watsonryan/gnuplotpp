@@ -196,11 +196,7 @@ RenderResult SvgBackend::render(const Figure& fig,
   const double cell_w = (width_px - left - right) / static_cast<double>(spec.cols);
   const double cell_h = (height_px - top - bottom) / static_cast<double>(spec.rows);
 
-  if (!spec.title.empty()) {
-    svg << "<text x=\"" << (width_px / 2.0) << "\" y=\"16\" text-anchor=\"middle\" "
-        << "font-family=\"" << xml_escape(spec.style.font) << "\" font-size=\""
-        << (spec.style.font_pt + 1.0) << "\">" << xml_escape(spec.title) << "</text>\n";
-  }
+  // Keep output minimal for broad renderer compatibility.
 
   const auto& axes = fig.all_axes();
   for (std::size_t idx = 0; idx < axes.size(); ++idx) {
@@ -272,27 +268,7 @@ RenderResult SvgBackend::render(const Figure& fig,
       }
     }
 
-    if (!axis_spec.title.empty()) {
-      svg << "<text x=\"" << (plot_l + plot_w / 2.0) << "\" y=\"" << (y0 + 12.0)
-          << "\" text-anchor=\"middle\" font-family=\"" << xml_escape(spec.style.font)
-          << "\" font-size=\"" << spec.style.font_pt << "\">"
-          << xml_escape(axis_spec.title) << "</text>\n";
-    }
-
-    if (!axis_spec.xlabel.empty()) {
-      svg << "<text x=\"" << (plot_l + plot_w / 2.0) << "\" y=\"" << (y0 + cell_h - 4.0)
-          << "\" text-anchor=\"middle\" font-family=\"" << xml_escape(spec.style.font)
-          << "\" font-size=\"" << (spec.style.font_pt - 0.5) << "\">"
-          << xml_escape(axis_spec.xlabel) << "</text>\n";
-    }
-
-    if (!axis_spec.ylabel.empty()) {
-      svg << "<g transform=\"translate(" << (x0 + 12.0) << "," << (plot_t + plot_h / 2.0)
-          << ") rotate(-90)\">"
-          << "<text x=\"0\" y=\"0\" text-anchor=\"middle\" font-family=\""
-          << xml_escape(spec.style.font) << "\" font-size=\"" << (spec.style.font_pt - 0.5)
-          << "\">" << xml_escape(axis_spec.ylabel) << "</text></g>\n";
-    }
+    (void)axis_spec;
   }
 
   svg << "</svg>\n";

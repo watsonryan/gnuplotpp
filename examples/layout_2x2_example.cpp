@@ -1,4 +1,5 @@
 #include "gnuplotpp/gnuplot_backend.hpp"
+#include "gnuplotpp/png_backend.hpp"
 #include "gnuplotpp/plot.hpp"
 #include "gnuplotpp/presets.hpp"
 #include "gnuplotpp/svg_backend.hpp"
@@ -72,16 +73,24 @@ int main(int argc, char** argv) {
   fig.axes(2).add_series(SeriesSpec{.type = SeriesType::Line, .label = "SRIF"}, t, ez);
   fig.axes(3).add_series(SeriesSpec{.type = SeriesType::Line, .label = "SRIF"}, t, ev);
 
+  RenderResult result;
   if (gnuplot_available()) {
     fig.set_backend(make_gnuplot_backend());
+    result = fig.save(out_dir / "figures");
   } else {
-    fig.set_backend(make_svg_backend());
+    fig.set_backend(make_png_backend());
+    result = fig.save(out_dir / "figures");
+    if (!result.ok) {
+      fig.set_backend(make_svg_backend());
+      result = fig.save(out_dir / "figures");
+    }
   }
 
-  const auto result = fig.save(out_dir / "figures");
   if (!result.ok) {
     std::cerr << "plot render incomplete: " << result.message << "\n";
-    std::cerr << "script: " << result.script_path << "\n";
+    if (!result.script_path.empty()) {
+      std::cerr << "script: " << result.script_path << "\n";
+    }
     return 1;
   }
 
