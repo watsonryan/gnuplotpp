@@ -309,7 +309,7 @@ std::string with_clause(const SeriesData& series,
       }
       break;
     case SeriesType::Heatmap:
-      os << "with points pt 5 ps 0.55 palette";
+      os << "with points pt 5 ps 1.10 palette";
       break;
   }
   return os.str();

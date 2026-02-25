@@ -28,6 +28,10 @@ gnuplotpp::FigureSpec base_spec(const std::string& title) {
            .manifest(true)
            .spec();
   fs.text_mode = TextMode::Enhanced;
+  fs.style.font = "Times";
+  fs.style.font_pt = 10.0;
+  fs.style.line_width_pt = 1.6;
+  fs.style.point_size = 0.8;
   return fs;
 }
 
@@ -95,10 +99,6 @@ int main(int argc, char** argv) {
   for (std::size_t i = 0; i < kde.size(); ++i) {
     kde_scaled[i] = kde[i] * static_cast<double>(samples.size()) * bin_w;
   }
-  std::vector<double> ecdf_x;
-  std::vector<double> ecdf_p;
-  ecdf(samples, ecdf_x, ecdf_p);
-
   std::vector<double> hx;
   std::vector<double> hy;
   std::vector<double> hz;
@@ -121,14 +121,11 @@ int main(int argc, char** argv) {
     ax.ylabel = "x(t)";
     ax.grid = true;
     ax.legend = true;
-    ax.legend_spec.position = LegendPosition::TopLeft;
+    ax.legend_spec.position = LegendPosition::TopRight;
     ax.legend_spec.columns = 1;
-    ax.labels.push_back(LabelAnnotation{
-        .text = "x(t)={/Symbol m}(t){/Symbol \\261}{/Symbol s}",
-        .at = "graph 0.05,0.92",
-        .font = "Times,8",
-        .front = true,
-    });
+    ax.legend_spec.boxed = true;
+    ax.has_ytick_step = true;
+    ax.ytick_step = 0.2;
     fig.axes(0).set(ax);
 
     SeriesSpec band;
@@ -138,13 +135,18 @@ int main(int argc, char** argv) {
     band.has_opacity = true;
     band.opacity = 0.20;
     fig.axes(0).add_band(band, t, lo, hi);
-    fig.axes(0).add_series(SeriesSpec{.label = "mean", .has_line_width = true, .line_width_pt = 1.7},
+    fig.axes(0).add_series(SeriesSpec{.label = "mean", .has_line_width = true, .line_width_pt = 2.1},
                            t,
                            mean);
-    std::vector<double> e_low(200, 0.08);
-    std::vector<double> e_high(200, 0.12);
-    fig.axes(0).add_errorbars_asymmetric(
-        SeriesSpec{.label = "obs", .has_color = true, .color = "#444444"}, t, mean, e_low, e_high);
+    std::vector<double> t_obs;
+    std::vector<double> y_obs;
+    for (int i = 0; i < 200; i += 10) {
+      t_obs.push_back(t[static_cast<std::size_t>(i)]);
+      y_obs.push_back(mean[static_cast<std::size_t>(i)] + 0.02 * std::sin(2.7 * t[static_cast<std::size_t>(i)]));
+    }
+    fig.axes(0).add_series(SeriesSpec{.type = SeriesType::Scatter, .label = "obs", .has_color = true, .color = "#444444"},
+                           t_obs,
+                           y_obs);
     if (render_figure(fig, out_dir / "mean_band" / "figures") != 0) {
       return 1;
     }
@@ -161,6 +163,9 @@ int main(int argc, char** argv) {
     ax.grid = true;
     ax.legend = true;
     ax.legend_spec.position = LegendPosition::TopRight;
+    ax.legend_spec.boxed = true;
+    ax.yformat = "%.0f";
+    ax.xformat = "%.1f";
     fig.axes(0).set(ax);
 
     SeriesSpec hist;
@@ -187,6 +192,7 @@ int main(int argc, char** argv) {
     ax.xlabel = "x";
     ax.ylabel = "y";
     ax.legend = false;
+    ax.grid = false;
     ax.has_xlim = true;
     ax.xmin = -2.05;
     ax.xmax = 2.05;
@@ -201,17 +207,18 @@ int main(int argc, char** argv) {
   }
 
   {
-    FigureSpec fs = base_spec("Lines + y2 ECDF");
+    FigureSpec fs = base_spec("Lines + y2 Probability");
     Figure fig(fs);
     AxesSpec ax;
-    ax.title = "Lines + y2 ECDF";
+    ax.title = "Lines + y2 Probability";
     ax.xlabel = "t [s]";
     ax.ylabel = "value";
-    ax.y2label = "p(x)";
+    ax.y2label = "P(event)";
     ax.grid = true;
     ax.legend = true;
-    ax.legend_spec.position = LegendPosition::TopLeft;
+    ax.legend_spec.position = LegendPosition::TopRight;
     ax.legend_spec.columns = 1;
+    ax.legend_spec.boxed = true;
     ax.has_y2lim = true;
     ax.y2min = 0.0;
     ax.y2max = 1.0;
@@ -225,10 +232,14 @@ int main(int argc, char** argv) {
     }
     fig.axes(0).add_series(SeriesSpec{.label = "cos"}, t, y1);
     fig.axes(0).add_series(SeriesSpec{.label = "sin"}, t, y2);
+    std::vector<double> p_event(200);
+    for (int i = 0; i < 200; ++i) {
+      p_event[static_cast<std::size_t>(i)] = 1.0 / (1.0 + std::exp(-(t[static_cast<std::size_t>(i)] - 10.0) / 1.8));
+    }
     fig.axes(0).add_series(
-        SeriesSpec{.label = "ECDF", .use_y2 = true, .has_line_width = true, .line_width_pt = 1.3},
-        ecdf_x,
-        ecdf_p);
+        SeriesSpec{.label = "P(event)", .use_y2 = true, .has_line_width = true, .line_width_pt = 2.0},
+        t,
+        p_event);
     if (render_figure(fig, out_dir / "lines_y2" / "figures") != 0) {
       return 1;
     }
