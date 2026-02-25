@@ -34,6 +34,7 @@ int main(int argc, char** argv) {
   ax.ylabel = "||e_p|| [m]";
   ax.legend = true;
   ax.grid = true;
+  ax.ylog = true;
   fig.axes(0).set(ax);
 
   std::vector<double> t;
