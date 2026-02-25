@@ -1,10 +1,14 @@
+#include "gnuplotpp/builder.hpp"
 #include "gnuplotpp/plot.hpp"
 #include "gnuplotpp/presets.hpp"
+#include "gnuplotpp/statistics.hpp"
+#include "gnuplotpp/theme.hpp"
 
 #include <cassert>
 #include <memory>
 #include <stdexcept>
 #include <vector>
+#include <filesystem>
 
 namespace {
 
@@ -62,6 +66,33 @@ int main() {
   apply_style_profile(spec, StyleProfile::Presentation);
   assert(spec.palette == ColorPalette::Viridis);
   assert(spec.style.font_pt >= 12.0);
+
+  FigureSpec built_spec = FigureBuilder(spec).layout(1, 1).manifest(true).spec();
+  assert(built_spec.write_manifest);
+
+  const auto ma = moving_average(y, 2);
+  assert(ma.size() == y.size());
+  const auto ds = downsample_uniform(y, 2);
+  assert(!ds.empty());
+  const auto ac = autocorrelation(y, 2);
+  assert(ac.size() == 3);
+
+  std::vector<double> ex;
+  std::vector<double> ep;
+  ecdf(y, ex, ep);
+  assert(ex.size() == y.size());
+
+  std::vector<std::vector<double>> ens{{1.0, 2.0, 3.0}, {2.0, 3.0, 4.0}, {3.0, 4.0, 5.0}};
+  std::vector<double> lo_b;
+  std::vector<double> hi_b;
+  percentile_band(ens, 0.1, 0.9, lo_b, hi_b);
+  assert(lo_b.size() == 3);
+
+  const auto theme_path = std::filesystem::temp_directory_path() / "gnuplotpp_theme_test.json";
+  assert(save_theme_json(theme_path, built_spec));
+  FigureSpec loaded = built_spec;
+  assert(load_theme_json(theme_path, loaded));
+  std::filesystem::remove(theme_path);
 
   const auto no_backend = fig.save("out");
   assert(!no_backend.ok);
