@@ -1,5 +1,4 @@
-#include "gnuplotpp/gnuplot_backend.hpp"
-#include "gnuplotpp/logging.hpp"
+#include "example_common.hpp"
 #include "gnuplotpp/plot.hpp"
 #include "gnuplotpp/presets.hpp"
 #include "gnuplotpp/statistics.hpp"
@@ -32,31 +31,13 @@ gnuplotpp::FigureSpec make_spec(const std::string& title) {
   return fs;
 }
 
-int render(gnuplotpp::Figure& fig, const std::filesystem::path& out_dir) {
-  fig.set_backend(gnuplotpp::make_gnuplot_backend());
-  const auto result = fig.save(out_dir);
-  if (!result.ok) {
-    gnuplotpp::log::Error("render failed: ", result.message);
-    return 1;
-  }
-  for (const auto& p : result.outputs) {
-    gnuplotpp::log::Info("output: ", p.string());
-  }
-  return 0;
-}
-
 }  // namespace
 
 int main(int argc, char** argv) {
   using namespace gnuplotpp;
 
-  std::filesystem::path out_root = "out/stats_plot_examples";
-  for (int i = 1; i < argc; ++i) {
-    const std::string arg = argv[i];
-    if (arg == "--out" && i + 1 < argc) {
-      out_root = argv[++i];
-    }
-  }
+  const std::filesystem::path out_root =
+      example_common::parse_out_dir(argc, argv, "out/stats_plot_examples");
   std::filesystem::create_directories(out_root);
 
   std::mt19937_64 rng(1234ULL);
@@ -120,7 +101,7 @@ int main(int argc, char** argv) {
         x_line,
         y_line);
 
-    if (render(fig, out_root / "qq_plot" / "figures") != 0) return 1;
+    if (example_common::render_figure(fig, out_root / "qq_plot" / "figures") != 0) return 1;
   }
 
   // 2) Violin profile
@@ -208,7 +189,7 @@ int main(int argc, char** argv) {
         x_obs,
         y_obs);
 
-    if (render(fig, out_root / "violin_profile" / "figures") != 0) return 1;
+    if (example_common::render_figure(fig, out_root / "violin_profile" / "figures") != 0) return 1;
   }
 
   // 3) Box summary + sample points
@@ -272,7 +253,7 @@ int main(int argc, char** argv) {
             std::to_string(box.whisker_high) + " nohead lw 1.5 lc rgb '#1f1f1f'"};
     fig.axes(0).set(ax);
 
-    if (render(fig, out_root / "box_summary" / "figures") != 0) return 1;
+    if (example_common::render_figure(fig, out_root / "box_summary" / "figures") != 0) return 1;
   }
 
   // 4) Confidence ellipse
@@ -341,7 +322,7 @@ int main(int argc, char** argv) {
         ex3,
         ey3);
 
-    if (render(fig, out_root / "confidence_ellipse" / "figures") != 0) return 1;
+    if (example_common::render_figure(fig, out_root / "confidence_ellipse" / "figures") != 0) return 1;
   }
 
   // 5) Autocorrelation
@@ -408,7 +389,7 @@ int main(int argc, char** argv) {
                            lags,
                            ci_neg);
 
-    if (render(fig, out_root / "autocorrelation" / "figures") != 0) return 1;
+    if (example_common::render_figure(fig, out_root / "autocorrelation" / "figures") != 0) return 1;
   }
 
   gnuplotpp::log::Info("generated stats examples under: ", out_root.string());

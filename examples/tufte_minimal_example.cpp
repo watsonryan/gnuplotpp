@@ -1,5 +1,4 @@
-#include "gnuplotpp/gnuplot_backend.hpp"
-#include "gnuplotpp/logging.hpp"
+#include "example_common.hpp"
 #include "gnuplotpp/plot.hpp"
 #include "gnuplotpp/presets.hpp"
 
@@ -11,13 +10,8 @@
 int main(int argc, char** argv) {
   using namespace gnuplotpp;
 
-  std::filesystem::path out_dir = "out/tufte_minimal_example";
-  for (int i = 1; i < argc; ++i) {
-    const std::string arg = argv[i];
-    if (arg == "--out" && i + 1 < argc) {
-      out_dir = argv[++i];
-    }
-  }
+  const std::filesystem::path out_dir =
+      example_common::parse_out_dir(argc, argv, "out/tufte_minimal_example");
 
   FigureSpec fs;
   fs.preset = Preset::Custom;
@@ -86,14 +80,5 @@ int main(int argc, char** argv) {
                                 " font 'Helvetica,10' textcolor rgb '#4a4a4a'");
   fig.axes(0).set(ax);
 
-  fig.set_backend(make_gnuplot_backend());
-  const auto result = fig.save(out_dir / "figures");
-  if (!result.ok) {
-    gnuplotpp::log::Error("plot render incomplete: ", result.message);
-    return 1;
-  }
-  for (const auto& output : result.outputs) {
-    gnuplotpp::log::Info("output: ", output.string());
-  }
-  return 0;
+  return example_common::render_figure(fig, out_dir / "figures");
 }

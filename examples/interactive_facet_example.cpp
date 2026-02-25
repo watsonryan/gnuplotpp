@@ -1,7 +1,6 @@
+#include "example_common.hpp"
 #include "gnuplotpp/data.hpp"
 #include "gnuplotpp/facet.hpp"
-#include "gnuplotpp/gnuplot_backend.hpp"
-#include "gnuplotpp/logging.hpp"
 #include "gnuplotpp/plot.hpp"
 #include "gnuplotpp/presets.hpp"
 #include "gnuplotpp/statistics.hpp"
@@ -15,13 +14,8 @@
 int main(int argc, char** argv) {
   using namespace gnuplotpp;
 
-  std::filesystem::path out_dir = "out/interactive_facet_example";
-  for (int i = 1; i < argc; ++i) {
-    const std::string arg = argv[i];
-    if (arg == "--out" && i + 1 < argc) {
-      out_dir = argv[++i];
-    }
-  }
+  const std::filesystem::path out_dir =
+      example_common::parse_out_dir(argc, argv, "out/interactive_facet_example");
 
   std::filesystem::create_directories(out_dir);
   const auto csv_path = out_dir / "demo.csv";
@@ -90,15 +84,8 @@ int main(int argc, char** argv) {
     fig.axes(k).add_series(SeriesSpec{.label = "mean", .has_line_width = true, .line_width_pt = 1.8}, t, y);
   }
 
-  fig.set_backend(make_gnuplot_backend());
-  const auto result = fig.save(out_dir / "figures");
-  if (!result.ok) {
-    gnuplotpp::log::Error("plot render incomplete: ", result.message);
-    gnuplotpp::log::Error("script: ", result.script_path.string());
+  if (example_common::render_figure(fig, out_dir / "figures") != 0) {
     return 1;
-  }
-  for (const auto& output : result.outputs) {
-    gnuplotpp::log::Info("output: ", output.string());
   }
   gnuplotpp::log::Info("interactive preview script: ",
                        (out_dir / "figures" / "tmp" / "interactive_preview.gp").string());

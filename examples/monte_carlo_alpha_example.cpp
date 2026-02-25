@@ -1,5 +1,4 @@
-#include "gnuplotpp/gnuplot_backend.hpp"
-#include "gnuplotpp/logging.hpp"
+#include "example_common.hpp"
 #include "gnuplotpp/plot.hpp"
 #include "gnuplotpp/presets.hpp"
 
@@ -136,15 +135,5 @@ int main(int argc, char** argv) {
                          t,
                          sigma_lower);
 
-  fig.set_backend(make_gnuplot_backend());
-  const auto result = fig.save(out_dir / "figures");
-  if (!result.ok) {
-    gnuplotpp::log::Error("plot render incomplete: ", result.message);
-    gnuplotpp::log::Error("script: ", result.script_path.string());
-    return 1;
-  }
-  for (const auto& output : result.outputs) {
-    gnuplotpp::log::Info("output: ", output.string());
-  }
-  return 0;
+  return example_common::render_figure(fig, out_dir / "figures");
 }

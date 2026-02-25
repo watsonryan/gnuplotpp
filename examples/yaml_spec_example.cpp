@@ -1,5 +1,4 @@
-#include "gnuplotpp/gnuplot_backend.hpp"
-#include "gnuplotpp/logging.hpp"
+#include "example_common.hpp"
 #include "gnuplotpp/plot.hpp"
 #include "gnuplotpp/spec_yaml.hpp"
 #include "gnuplotpp/templates.hpp"
@@ -13,13 +12,8 @@
 int main(int argc, char** argv) {
   using namespace gnuplotpp;
 
-  std::filesystem::path out_dir = "out/yaml_spec_example";
-  for (int i = 1; i < argc; ++i) {
-    const std::string arg = argv[i];
-    if (arg == "--out" && i + 1 < argc) {
-      out_dir = argv[++i];
-    }
-  }
+  const std::filesystem::path out_dir =
+      example_common::parse_out_dir(argc, argv, "out/yaml_spec_example");
   std::filesystem::create_directories(out_dir);
   write_template_gallery_yaml(out_dir / "templates");
 
@@ -57,15 +51,5 @@ int main(int argc, char** argv) {
   fig.axes(0).add_series(SeriesSpec{.label = "series A"}, t, y1);
   fig.axes(0).add_series(SeriesSpec{.label = "series B"}, t, y2);
 
-  fig.set_backend(make_gnuplot_backend());
-  const auto result = fig.save(out_dir / "figures");
-  if (!result.ok) {
-    gnuplotpp::log::Error("plot render incomplete: ", result.message);
-    gnuplotpp::log::Error("script: ", result.script_path.string());
-    return 1;
-  }
-  for (const auto& output : result.outputs) {
-    gnuplotpp::log::Info("output: ", output.string());
-  }
-  return 0;
+  return example_common::render_figure(fig, out_dir / "figures");
 }

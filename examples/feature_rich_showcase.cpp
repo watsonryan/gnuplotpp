@@ -1,6 +1,5 @@
+#include "example_common.hpp"
 #include "gnuplotpp/builder.hpp"
-#include "gnuplotpp/gnuplot_backend.hpp"
-#include "gnuplotpp/logging.hpp"
 #include "gnuplotpp/plot.hpp"
 #include "gnuplotpp/presets.hpp"
 #include "gnuplotpp/statistics.hpp"
@@ -37,32 +36,13 @@ gnuplotpp::FigureSpec base_spec(const std::string& title) {
   return fs;
 }
 
-int render_figure(gnuplotpp::Figure& fig, const std::filesystem::path& out_dir) {
-  fig.set_backend(gnuplotpp::make_gnuplot_backend());
-  const auto result = fig.save(out_dir);
-  if (!result.ok) {
-    gnuplotpp::log::Error("plot render incomplete: ", result.message);
-    gnuplotpp::log::Error("script: ", result.script_path.string());
-    return 1;
-  }
-  for (const auto& output : result.outputs) {
-    gnuplotpp::log::Info("output: ", output.string());
-  }
-  return 0;
-}
-
 }  // namespace
 
 int main(int argc, char** argv) {
   using namespace gnuplotpp;
 
-  std::filesystem::path out_dir = "out/feature_rich_showcase";
-  for (int i = 1; i < argc; ++i) {
-    const std::string arg = argv[i];
-    if (arg == "--out" && i + 1 < argc) {
-      out_dir = argv[++i];
-    }
-  }
+  const std::filesystem::path out_dir =
+      example_common::parse_out_dir(argc, argv, "out/feature_rich_showcase");
 
   std::filesystem::create_directories(out_dir);
 
@@ -154,7 +134,7 @@ int main(int argc, char** argv) {
     fig.axes(0).add_series(SeriesSpec{.type = SeriesType::Scatter, .label = "obs", .has_color = true, .color = "#444444"},
                            t_obs,
                            y_obs);
-    if (render_figure(fig, out_dir / "mean_band" / "figures") != 0) {
+    if (example_common::render_figure(fig, out_dir / "mean_band" / "figures") != 0) {
       return 1;
     }
     save_theme_json(out_dir / "mean_band" / "figures" / "science_theme.json", fs);
@@ -190,7 +170,7 @@ int main(int argc, char** argv) {
     fig.axes(0).add_series(SeriesSpec{.label = "KDE", .has_line_width = true, .line_width_pt = 2.6},
                            bins,
                            kde_scaled);
-    if (render_figure(fig, out_dir / "hist_kde" / "figures") != 0) {
+    if (example_common::render_figure(fig, out_dir / "hist_kde" / "figures") != 0) {
       return 1;
     }
   }
@@ -214,7 +194,7 @@ int main(int argc, char** argv) {
     ax.gnuplot_commands = {"set size ratio -1"};
     fig.axes(0).set(ax);
     fig.axes(0).add_heatmap(SeriesSpec{.label = "density"}, hx, hy, hz);
-    if (render_figure(fig, out_dir / "heatmap" / "figures") != 0) {
+    if (example_common::render_figure(fig, out_dir / "heatmap" / "figures") != 0) {
       return 1;
     }
   }
@@ -255,7 +235,7 @@ int main(int argc, char** argv) {
         SeriesSpec{.label = "P(event)", .use_y2 = true, .has_line_width = true, .line_width_pt = 2.4},
         t,
         p_event);
-    if (render_figure(fig, out_dir / "lines_y2" / "figures") != 0) {
+    if (example_common::render_figure(fig, out_dir / "lines_y2" / "figures") != 0) {
       return 1;
     }
   }
