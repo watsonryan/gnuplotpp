@@ -107,6 +107,10 @@ std::string color_for(std::size_t idx) {
   return kColors[idx % kColors.size()];
 }
 
+double safe_value(const double v, const double fallback = 0.0) {
+  return std::isfinite(v) ? v : fallback;
+}
+
 }  // namespace
 
 RenderResult SvgBackend::render(const Figure& fig,
@@ -140,9 +144,10 @@ RenderResult SvgBackend::render(const Figure& fig,
   std::ostringstream svg;
   svg << std::fixed << std::setprecision(3);
   svg << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-  svg << "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"" << width_px
-      << "\" height=\"" << height_px << "\" viewBox=\"0 0 " << width_px << " "
-      << height_px << "\">\n";
+  svg << "<svg xmlns=\"http://www.w3.org/2000/svg\" "
+      << "xmlns:xlink=\"http://www.w3.org/1999/xlink\" "
+      << "version=\"1.1\" width=\"" << width_px << "px\" height=\"" << height_px
+      << "px\" viewBox=\"0 0 " << width_px << " " << height_px << "\">\n";
   svg << "<rect x=\"0\" y=\"0\" width=\"" << width_px << "\" height=\"" << height_px
       << "\" fill=\"white\"/>\n";
 
@@ -193,10 +198,10 @@ RenderResult SvgBackend::render(const Figure& fig,
     }
 
     const auto map_x = [&](const double x) {
-      return plot_l + (x - bounds.xmin) * plot_w / (bounds.xmax - bounds.xmin);
+      return safe_value(plot_l + (x - bounds.xmin) * plot_w / (bounds.xmax - bounds.xmin), plot_l);
     };
     const auto map_y = [&](const double y) {
-      return plot_b - (y - bounds.ymin) * plot_h / (bounds.ymax - bounds.ymin);
+      return safe_value(plot_b - (y - bounds.ymin) * plot_h / (bounds.ymax - bounds.ymin), plot_b);
     };
 
     for (std::size_t s = 0; s < axis.series().size(); ++s) {
@@ -215,8 +220,11 @@ RenderResult SvgBackend::render(const Figure& fig,
         }
       } else {
         svg << "<polyline fill=\"none\" stroke=\"" << color << "\" stroke-width=\"" << lw
-            << "\" points=\"";
+            << "\" stroke-linejoin=\"round\" stroke-linecap=\"round\" points=\"";
         for (std::size_t i = 0; i < series.x.size(); ++i) {
+          if (!std::isfinite(series.x[i]) || !std::isfinite(series.y[i])) {
+            continue;
+          }
           svg << map_x(series.x[i]) << "," << map_y(series.y[i]);
           if (i + 1 < series.x.size()) {
             svg << " ";
@@ -241,11 +249,11 @@ RenderResult SvgBackend::render(const Figure& fig,
     }
 
     if (!axis_spec.ylabel.empty()) {
-      svg << "<text x=\"" << (x0 + 12.0) << "\" y=\"" << (plot_t + plot_h / 2.0)
-          << "\" text-anchor=\"middle\" transform=\"rotate(-90 " << (x0 + 12.0) << " "
-          << (plot_t + plot_h / 2.0) << ")\" font-family=\"" << xml_escape(spec.style.font)
-          << "\" font-size=\"" << (spec.style.font_pt - 0.5) << "\">"
-          << xml_escape(axis_spec.ylabel) << "</text>\n";
+      svg << "<g transform=\"translate(" << (x0 + 12.0) << "," << (plot_t + plot_h / 2.0)
+          << ") rotate(-90)\">"
+          << "<text x=\"0\" y=\"0\" text-anchor=\"middle\" font-family=\""
+          << xml_escape(spec.style.font) << "\" font-size=\"" << (spec.style.font_pt - 0.5)
+          << "\">" << xml_escape(axis_spec.ylabel) << "</text></g>\n";
     }
   }
 
