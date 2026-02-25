@@ -197,7 +197,7 @@ std::string terminal_for(OutputFormat format, const FigureSpec& spec) {
          << "' linewidth " << lw;
       return os.str();
     case OutputFormat::Png:
-      os << "set terminal pngcairo size " << (spec.size.w * 200.0) << "," << (spec.size.h * 200.0)
+      os << "set terminal pngcairo size " << (spec.size.w * 300.0) << "," << (spec.size.h * 300.0)
          << " enhanced background rgb 'white' font '" << spec.style.font << ","
          << spec.style.font_pt << "' linewidth " << lw;
       return os.str();
@@ -309,7 +309,7 @@ std::string with_clause(const SeriesData& series,
       }
       break;
     case SeriesType::Heatmap:
-      os << "with points pt 5 ps 1.10 palette";
+      os << "with image";
       break;
   }
   return os.str();
@@ -387,7 +387,7 @@ void emit_plot_body(std::ostream& os,
   const double label_font_pt = ieee ? 8.5 : spec.style.font_pt;
   const double title_font_pt = ieee ? 8.5 : spec.style.font_pt;
 
-  os << "set border linewidth 0.5 linecolor rgb '#222222'\n";
+  os << "set border linewidth 0.9 linecolor rgb '#222222'\n";
   os << "set tics in nomirror scale 0.5,0.25\n";
   os << "unset x2tics\n";
   os << "unset y2tics\n";
@@ -398,7 +398,7 @@ void emit_plot_body(std::ostream& os,
   os << "set format x '%.2g'\n";
   os << "set format y '%.2g'\n";
   if (heatmap) {
-    os << "set palette rgbformulae 33,13,10\n";
+    os << "set palette defined (0 '#0b132b', 0.18 '#1c2541', 0.36 '#3a506b', 0.54 '#5bc0be', 0.72 '#a7f3d0', 1 '#fef08a')\n";
     os << "set colorbox\n";
   } else {
     os << "unset colorbox\n";
@@ -472,7 +472,7 @@ void emit_plot_body(std::ostream& os,
     }
 
     if (axis_spec.grid || spec.style.grid) {
-      os << "set grid xtics ytics linewidth 0.5 linecolor rgb '#d0d0d0'\n";
+      os << "set grid xtics ytics linewidth 0.35 linecolor rgb '#e2e2e2'\n";
     }
     if (axis_spec.xlog) {
       os << "set logscale x\n";

@@ -29,9 +29,10 @@ gnuplotpp::FigureSpec base_spec(const std::string& title) {
            .spec();
   fs.text_mode = TextMode::Enhanced;
   fs.style.font = "Times";
-  fs.style.font_pt = 10.0;
-  fs.style.line_width_pt = 1.6;
+  fs.style.font_pt = 11.0;
+  fs.style.line_width_pt = 1.8;
   fs.style.point_size = 0.8;
+  fs.size = FigureSizeInches{.w = 4.6, .h = 3.2};
   return fs;
 }
 
@@ -70,7 +71,7 @@ int main(int argc, char** argv) {
   std::vector<double> hi(200);
   for (int i = 0; i < 200; ++i) {
     t[i] = 0.1 * static_cast<double>(i);
-    mean[i] = 0.4 * std::sin(0.7 * t[i]) + 0.02 * t[i];
+    mean[i] = 0.55 * std::exp(-0.035 * t[i]) * std::sin(0.72 * t[i]) + 0.03;
     lo[i] = mean[i] - 0.25;
     hi[i] = mean[i] + 0.25;
   }
@@ -103,12 +104,12 @@ int main(int argc, char** argv) {
   std::vector<double> hy;
   std::vector<double> hz;
   for (int iy = 0; iy < 40; ++iy) {
-    for (int ix = 0; ix < 40; ++ix) {
-      const double x = -2.0 + 4.0 * static_cast<double>(ix) / 39.0;
+    for (int ix = 0; ix < 60; ++ix) {
+      const double x = -2.0 + 4.0 * static_cast<double>(ix) / 59.0;
       const double y = -2.0 + 4.0 * static_cast<double>(iy) / 39.0;
       hx.push_back(x);
       hy.push_back(y);
-      hz.push_back(std::exp(-(x * x + y * y)));
+      hz.push_back(std::exp(-((x - 0.2) * (x - 0.2) / 1.4 + (y + 0.1) * (y + 0.1) / 1.0)));
     }
   }
 
@@ -116,16 +117,19 @@ int main(int argc, char** argv) {
     FigureSpec fs = base_spec("Mean + Confidence Band");
     Figure fig(fs);
     AxesSpec ax;
-    ax.title = "Mean + Confidence Band";
+    ax.title = "State Estimate with 95% Interval";
     ax.xlabel = "t [s]";
     ax.ylabel = "x(t)";
     ax.grid = true;
     ax.legend = true;
-    ax.legend_spec.position = LegendPosition::TopRight;
+    ax.legend_spec.position = LegendPosition::BottomLeft;
     ax.legend_spec.columns = 1;
     ax.legend_spec.boxed = true;
     ax.has_ytick_step = true;
     ax.ytick_step = 0.2;
+    ax.has_xlim = true;
+    ax.xmin = 0.0;
+    ax.xmax = 20.0;
     fig.axes(0).set(ax);
 
     SeriesSpec band;
@@ -135,7 +139,7 @@ int main(int argc, char** argv) {
     band.has_opacity = true;
     band.opacity = 0.20;
     fig.axes(0).add_band(band, t, lo, hi);
-    fig.axes(0).add_series(SeriesSpec{.label = "mean", .has_line_width = true, .line_width_pt = 2.1},
+    fig.axes(0).add_series(SeriesSpec{.label = "mean", .has_line_width = true, .line_width_pt = 2.3},
                            t,
                            mean);
     std::vector<double> t_obs;
@@ -157,7 +161,7 @@ int main(int argc, char** argv) {
     FigureSpec fs = base_spec("Histogram + KDE");
     Figure fig(fs);
     AxesSpec ax;
-    ax.title = "Histogram + KDE";
+    ax.title = "Distribution: Histogram and KDE";
     ax.xlabel = "bin center";
     ax.ylabel = "count";
     ax.grid = true;
@@ -166,6 +170,9 @@ int main(int argc, char** argv) {
     ax.legend_spec.boxed = true;
     ax.yformat = "%.0f";
     ax.xformat = "%.1f";
+    ax.has_xlim = true;
+    ax.xmin = -1.3;
+    ax.xmax = 1.3;
     fig.axes(0).set(ax);
 
     SeriesSpec hist;
@@ -185,10 +192,10 @@ int main(int argc, char** argv) {
 
   {
     FigureSpec fs = base_spec("Heatmap Samples");
-    fs.size = FigureSizeInches{.w = 3.2, .h = 3.2};
+    fs.size = FigureSizeInches{.w = 3.8, .h = 3.8};
     Figure fig(fs);
     AxesSpec ax;
-    ax.title = "Heatmap Samples";
+    ax.title = "2D Density Field";
     ax.xlabel = "x";
     ax.ylabel = "y";
     ax.legend = false;
@@ -199,6 +206,7 @@ int main(int argc, char** argv) {
     ax.has_ylim = true;
     ax.ymin = -2.05;
     ax.ymax = 2.05;
+    ax.gnuplot_commands = {"set size ratio -1"};
     fig.axes(0).set(ax);
     fig.axes(0).add_heatmap(SeriesSpec{.label = "density"}, hx, hy, hz);
     if (render_figure(fig, out_dir / "heatmap" / "figures") != 0) {
@@ -207,16 +215,16 @@ int main(int argc, char** argv) {
   }
 
   {
-    FigureSpec fs = base_spec("Lines + y2 Probability");
+    FigureSpec fs = base_spec("Primary Signal and Detection Probability");
     Figure fig(fs);
     AxesSpec ax;
-    ax.title = "Lines + y2 Probability";
+    ax.title = "Primary Signal and Detection Probability";
     ax.xlabel = "t [s]";
     ax.ylabel = "value";
     ax.y2label = "P(event)";
     ax.grid = true;
     ax.legend = true;
-    ax.legend_spec.position = LegendPosition::TopRight;
+    ax.legend_spec.position = LegendPosition::BottomRight;
     ax.legend_spec.columns = 1;
     ax.legend_spec.boxed = true;
     ax.has_y2lim = true;
@@ -227,17 +235,17 @@ int main(int argc, char** argv) {
     std::vector<double> y1(200);
     std::vector<double> y2(200);
     for (int i = 0; i < 200; ++i) {
-      y1[i] = std::cos(0.5 * t[i]);
-      y2[i] = std::sin(0.5 * t[i]);
+      y1[i] = 0.9 * std::exp(-0.03 * t[i]) * std::cos(0.62 * t[i]);
+      y2[i] = 0.9 * std::exp(-0.03 * t[i]) * std::sin(0.62 * t[i]);
     }
-    fig.axes(0).add_series(SeriesSpec{.label = "cos"}, t, y1);
-    fig.axes(0).add_series(SeriesSpec{.label = "sin"}, t, y2);
+    fig.axes(0).add_series(SeriesSpec{.label = "signal A"}, t, y1);
+    fig.axes(0).add_series(SeriesSpec{.label = "signal B"}, t, y2);
     std::vector<double> p_event(200);
     for (int i = 0; i < 200; ++i) {
       p_event[static_cast<std::size_t>(i)] = 1.0 / (1.0 + std::exp(-(t[static_cast<std::size_t>(i)] - 10.0) / 1.8));
     }
     fig.axes(0).add_series(
-        SeriesSpec{.label = "P(event)", .use_y2 = true, .has_line_width = true, .line_width_pt = 2.0},
+        SeriesSpec{.label = "P(event)", .use_y2 = true, .has_line_width = true, .line_width_pt = 2.4},
         t,
         p_event);
     if (render_figure(fig, out_dir / "lines_y2" / "figures") != 0) {
