@@ -63,7 +63,7 @@ int main() {
   assert(script.find("set multiplot layout 1,2") != std::string::npos);
   assert(script.find("set terminal pdfcairo") != std::string::npos);
   assert(script.find("set terminal pngcairo") != std::string::npos);
-  assert(script.find("font 'Times,18.700'") != std::string::npos);
+  assert(script.find("font 'Times,29.750'") != std::string::npos);
   assert(script.find("set monochrome") != std::string::npos);
   assert(script.find("dt 1") != std::string::npos);
   assert(script.find("plot") != std::string::npos);
