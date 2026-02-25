@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
   apply_preset_defaults(fs);
   fs.rows = 1;
   fs.cols = 1;
-  fs.formats = {OutputFormat::Pdf, OutputFormat::Svg, OutputFormat::Eps};
+  fs.formats = {OutputFormat::Pdf, OutputFormat::Png, OutputFormat::Svg, OutputFormat::Eps};
   fs.title = "Monte Carlo Ensemble (N=1000)";
 
   Figure fig(fs);

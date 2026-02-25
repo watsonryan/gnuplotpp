@@ -113,6 +113,35 @@ bool has_custom_color_or_opacity(const Figure& fig) {
   return false;
 }
 
+bool has_series_opacity(const Figure& fig) {
+  for (const auto& axis : fig.all_axes()) {
+    for (const auto& series : axis.series()) {
+      if (series.spec.has_opacity) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+const char* format_name(const OutputFormat format) {
+  switch (format) {
+    case OutputFormat::Pdf:
+      return "PDF";
+    case OutputFormat::Svg:
+      return "SVG";
+    case OutputFormat::Eps:
+      return "EPS";
+    case OutputFormat::Png:
+      return "PNG";
+  }
+  return "unknown";
+}
+
+bool format_supports_line_alpha(const OutputFormat format) {
+  return format == OutputFormat::Png;
+}
+
 std::string terminal_for(OutputFormat format, const FigureSpec& spec) {
   std::ostringstream os;
   os << std::fixed << std::setprecision(3);
@@ -385,8 +414,13 @@ RenderResult GnuplotBackend::render(const Figure& fig,
     return result;
   }
   script_os << "set encoding utf8\n";
+  const bool any_series_opacity = has_series_opacity(fig);
 
   for (const auto format : fig.spec().formats) {
+    if (any_series_opacity && !format_supports_line_alpha(format)) {
+      gnuplotpp::log::Warn("line opacity requested but ", format_name(format),
+                           " terminal may ignore alpha; prefer PNG for true line transparency");
+    }
     const auto output_path = out_dir / ("figure." + extension_for(format));
     result.outputs.push_back(output_path);
 
