@@ -26,7 +26,12 @@ target_compile_features(gnuplotpp PUBLIC cxx_std_20)
 
 if(BUILD_TESTING)
   enable_testing()
+
   add_executable(gnuplotpp_api_test tests/api_test.cpp)
   target_link_libraries(gnuplotpp_api_test PRIVATE gnuplotpp::gnuplotpp)
   add_test(NAME gnuplotpp_api_test COMMAND gnuplotpp_api_test)
+
+  add_executable(gnuplotpp_gnuplot_backend_test tests/gnuplot_backend_test.cpp)
+  target_link_libraries(gnuplotpp_gnuplot_backend_test PRIVATE gnuplotpp::gnuplotpp)
+  add_test(NAME gnuplotpp_gnuplot_backend_test COMMAND gnuplotpp_gnuplot_backend_test)
 endif()
