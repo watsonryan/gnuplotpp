@@ -7,7 +7,9 @@
 #include <algorithm>
 #include <cmath>
 #include <filesystem>
+#include <iomanip>
 #include <random>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -139,41 +141,77 @@ int main(int argc, char** argv) {
     ax.has_xlim = true;
     ax.xmin = -1.05;
     ax.xmax = 1.05;
+    ax.has_ylim = true;
+    ax.ymin = -2.6;
+    ax.ymax = 3.2;
     ax.has_xtick_step = true;
     ax.xtick_step = 0.25;
     fig.axes(0).set(ax);
 
     std::vector<double> y_grid, half_w;
     violin_profile(samples, y_grid, half_w, 180);
-    const auto [vy_min_it, vy_max_it] = std::minmax_element(y_grid.begin(), y_grid.end());
+    const auto summary = box_summary(samples);
     std::vector<double> x_l(half_w.size()), x_r(half_w.size());
     for (std::size_t i = 0; i < half_w.size(); ++i) {
       x_l[i] = -half_w[i];
       x_r[i] = half_w[i];
     }
+    std::ostringstream fill_poly;
+    fill_poly << std::fixed << std::setprecision(6);
+    fill_poly << "set object 20 polygon from ";
+    for (std::size_t i = 0; i < y_grid.size(); ++i) {
+      fill_poly << x_l[i] << "," << y_grid[i] << " to ";
+    }
+    for (std::size_t i = y_grid.size(); i > 0; --i) {
+      const std::size_t j = i - 1;
+      fill_poly << x_r[j] << "," << y_grid[j];
+      if (j > 0) {
+        fill_poly << " to ";
+      }
+    }
+    fill_poly << " fs transparent solid 0.32 fc rgb '#6aaed6' front";
+    ax.gnuplot_commands = {
+        fill_poly.str(),
+        "set arrow 20 from -0.30," + std::to_string(summary.q1) + " to 0.30," +
+            std::to_string(summary.q1) + " nohead lw 1.5 lc rgb '#1f1f1f' dt 2 front",
+        "set arrow 21 from -0.36," + std::to_string(summary.median) + " to 0.36," +
+            std::to_string(summary.median) + " nohead lw 2.0 lc rgb '#1f1f1f' front",
+        "set arrow 22 from -0.30," + std::to_string(summary.q3) + " to 0.30," +
+            std::to_string(summary.q3) + " nohead lw 1.5 lc rgb '#1f1f1f' dt 2 front"};
+    fig.axes(0).set(ax);
+
     fig.axes(0).add_series(SeriesSpec{.label = "left",
                                       .has_line_width = true,
-                                      .line_width_pt = 2.6,
+                                      .line_width_pt = 2.3,
                                       .has_color = true,
                                       .color = "#2c7fb8"},
                            x_l,
                            y_grid);
     fig.axes(0).add_series(SeriesSpec{.label = "right",
                                       .has_line_width = true,
-                                      .line_width_pt = 2.6,
+                                      .line_width_pt = 2.3,
                                       .has_color = true,
                                       .color = "#2c7fb8"},
                            x_r,
                            y_grid);
-    std::vector<double> x_mid{0.0, 0.0};
-    std::vector<double> y_mid{*vy_min_it, *vy_max_it};
-    fig.axes(0).add_series(SeriesSpec{.label = "center",
-                                      .has_line_width = true,
-                                      .line_width_pt = 1.5,
-                                      .has_color = true,
-                                      .color = "#1b5e85"},
-                           x_mid,
-                           y_mid);
+    std::vector<double> x_obs;
+    std::vector<double> y_obs;
+    x_obs.reserve(350);
+    y_obs.reserve(350);
+    std::uniform_real_distribution<double> x_jitter(-0.05, 0.05);
+    for (int i = 0; i < 350; ++i) {
+      x_obs.push_back(x_jitter(rng));
+      y_obs.push_back(samples[static_cast<std::size_t>(i)]);
+    }
+    fig.axes(0).add_series(
+        SeriesSpec{.type = SeriesType::Scatter,
+                   .label = "",
+                   .has_color = true,
+                   .color = "#2f2f2f",
+                   .has_opacity = true,
+                   .opacity = 0.45},
+        x_obs,
+        y_obs);
 
     if (render(fig, out_root / "violin_profile" / "figures") != 0) return 1;
   }
@@ -280,7 +318,7 @@ int main(int argc, char** argv) {
     std::vector<double> ex, ey;
     confidence_ellipse(x, y, 2.0, ex, ey, 240);
     fig.axes(0).add_series(
-        SeriesSpec{.label = "2\\sigma ellipse",
+        SeriesSpec{.label = "2{/Symbol s} ellipse",
                    .has_line_width = true,
                    .line_width_pt = 2.8,
                    .has_color = true,
