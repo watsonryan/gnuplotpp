@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
   apply_preset_defaults(fs);
   fs.rows = 2;
   fs.cols = 2;
-  fs.formats = {OutputFormat::Pdf, OutputFormat::Svg};
+  fs.formats = {OutputFormat::Pdf, OutputFormat::Svg, OutputFormat::Png};
   fs.title = "State Error Overview";
 
   Figure fig(fs);
