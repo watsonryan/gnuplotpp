@@ -174,31 +174,68 @@ const char* format_name(const OutputFormat format) {
 
 bool format_supports_line_alpha(const OutputFormat format) { return format == OutputFormat::Png; }
 
+std::string color_map_script(const ColorMap map) {
+  switch (map) {
+    case ColorMap::Viridis:
+      return "set palette defined (0 '#440154', 0.25 '#31688e', 0.5 '#35b779', 0.75 '#8fd744', 1 '#fde725')";
+    case ColorMap::Cividis:
+      return "set palette defined (0 '#00224e', 0.25 '#35456c', 0.5 '#666970', 0.75 '#948f65', 1 '#fee838')";
+    case ColorMap::Turbo:
+      return "set palette rgbformulae 33,13,10";
+    case ColorMap::Magma:
+      return "set palette defined (0 '#000004', 0.25 '#51127c', 0.5 '#b73779', 0.75 '#fc8961', 1 '#fcfdbf')";
+    case ColorMap::CoolWarm:
+      return "set palette defined (0 '#3b4cc0', 0.5 '#f7f7f7', 1 '#b40426')";
+    case ColorMap::Gray:
+      return "set palette gray";
+  }
+  return "set palette rgbformulae 33,13,10";
+}
+
+std::string panel_label_text(const std::size_t idx) {
+  const char ch = static_cast<char>('a' + static_cast<int>(idx % 26));
+  return std::string("(") + ch + ")";
+}
+
+std::string resolve_font(const FigureSpec& spec, const OutputFormat format) {
+  (void)format;
+  if (!spec.style.font.empty()) {
+    return spec.style.font;
+  }
+  for (const auto& f : spec.font_fallbacks) {
+    if (!f.empty()) {
+      return f;
+    }
+  }
+  return "Helvetica";
+}
+
 std::string terminal_for(OutputFormat format, const FigureSpec& spec) {
   std::ostringstream os;
   os << std::fixed << std::setprecision(3);
   const double lw = std::max(0.5, spec.style.line_width_pt);
   const char* enhanced = spec.text_mode == TextMode::Plain ? "noenhanced" : "enhanced";
+  const std::string font = resolve_font(spec, format);
 
   switch (format) {
     case OutputFormat::Pdf:
       os << "set terminal pdfcairo size " << spec.size.w << "in," << spec.size.h << "in "
-         << enhanced << " color font '" << spec.style.font << "," << spec.style.font_pt
+         << enhanced << " color font '" << font << "," << spec.style.font_pt
          << "' linewidth " << lw << " rounded";
       return os.str();
     case OutputFormat::Svg:
       os << "set terminal svg size " << (spec.size.w * 96.0) << "," << (spec.size.h * 96.0)
-         << " " << enhanced << " font '" << spec.style.font << "," << spec.style.font_pt
+         << " " << enhanced << " font '" << font << "," << spec.style.font_pt
          << "' linewidth " << lw << " dynamic background rgb 'white'";
       return os.str();
     case OutputFormat::Eps:
       os << "set terminal epscairo size " << spec.size.w << "in," << spec.size.h << "in "
-         << enhanced << " color font '" << spec.style.font << "," << spec.style.font_pt
+         << enhanced << " color font '" << font << "," << spec.style.font_pt
          << "' linewidth " << lw;
       return os.str();
     case OutputFormat::Png:
       os << "set terminal pngcairo size " << (spec.size.w * 300.0) << "," << (spec.size.h * 300.0)
-         << " enhanced background rgb 'white' font '" << spec.style.font << ","
+         << " enhanced background rgb 'white' font '" << font << ","
          << spec.style.font_pt << "' linewidth " << lw;
       return os.str();
   }
@@ -417,7 +454,7 @@ void emit_plot_body(std::ostream& os,
   os << "set format x '%.2g'\n";
   os << "set format y '%.2g'\n";
   if (heatmap) {
-    os << "set palette defined (0 '#0b132b', 0.18 '#1c2541', 0.36 '#3a506b', 0.54 '#5bc0be', 0.72 '#a7f3d0', 1 '#fef08a')\n";
+    os << color_map_script(ColorMap::Viridis) << "\n";
     os << "set colorbox\n";
   } else {
     os << "unset colorbox\n";
@@ -499,6 +536,24 @@ void emit_plot_body(std::ostream& os,
     if (axis_spec.grid || spec.style.grid) {
       os << "set grid xtics ytics linewidth 0.35 linecolor rgb '#e2e2e2'\n";
     }
+    if (!axis_spec.colorbar_label.empty()) {
+      os << "set cblabel '" << esc(axis_spec.colorbar_label) << "' font '" << esc(spec.style.font)
+         << "," << label_font_pt << "'\n";
+    }
+    if (axis_spec.has_cbrange) {
+      os << "set cbrange [" << axis_spec.cbmin << ":" << axis_spec.cbmax << "]\n";
+    } else {
+      os << "set autoscale cb\n";
+    }
+    if (axis_spec.has_cbtick_step) {
+      os << "set cbtics " << axis_spec.cbtick_step << "\n";
+    }
+    if (axis_spec.color_norm == ColorNorm::Log) {
+      os << "set logscale cb\n";
+    } else {
+      os << "unset logscale cb\n";
+    }
+    os << color_map_script(axis_spec.color_map) << "\n";
     if (axis_spec.enable_crosshair) {
       os << "set mouse\n";
       os << "set mxtics 4\n";
@@ -568,6 +623,11 @@ void emit_plot_body(std::ostream& os,
     }
 
     emit_typed_objects(os, axis_spec);
+    if (spec.panel_labels) {
+      os << "set label " << (2000 + static_cast<int>(axis_idx)) << " '"
+         << panel_label_text(axis_idx) << "' at graph 0.01,0.99 font '" << esc(spec.style.font)
+         << "," << std::max(8.0, label_font_pt) << "' front\n";
+    }
     for (const auto& cmd : axis_spec.gnuplot_commands) {
       os << cmd << "\n";
     }
@@ -592,6 +652,10 @@ void emit_plot_body(std::ostream& os,
     }
   }
 
+  if (!spec.caption.empty()) {
+    os << "set label 9999 '" << esc(spec.caption) << "' at screen 0.5,0.01 center font '"
+       << esc(spec.style.font) << "," << std::max(8.0, label_font_pt - 0.5) << "'\n";
+  }
   os << "unset multiplot\n";
 }
 

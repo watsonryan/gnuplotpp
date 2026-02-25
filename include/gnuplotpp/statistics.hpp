@@ -88,4 +88,48 @@ std::vector<double> downsample_uniform(std::span<const double> y, std::size_t k)
  */
 std::vector<double> autocorrelation(std::span<const double> y, std::size_t max_lag);
 
+/**
+ * @brief Compute Q-Q plot points against a normal distribution.
+ * @param samples Input samples.
+ * @param theo Quantile positions of reference normal.
+ * @param samp Sorted sample quantiles.
+ */
+void qq_plot_normal(std::span<const double> samples,
+                    std::vector<double>& theo,
+                    std::vector<double>& samp);
+
+/**
+ * @brief Five-number summary for boxplot style rendering.
+ */
+struct BoxSummary {
+  double q1 = 0.0;
+  double median = 0.0;
+  double q3 = 0.0;
+  double whisker_low = 0.0;
+  double whisker_high = 0.0;
+};
+
+/**
+ * @brief Compute boxplot summary using Tukey 1.5*IQR whiskers.
+ * @param samples Input data.
+ * @return Summary statistics.
+ */
+BoxSummary box_summary(std::span<const double> samples);
+
+/**
+ * @brief 2D confidence ellipse points from covariance-like samples.
+ * @param x Samples for x.
+ * @param y Samples for y.
+ * @param nsigma Sigma scale (e.g., 1,2,3).
+ * @param x_ellipse Output x points.
+ * @param y_ellipse Output y points.
+ * @param points Number of points.
+ */
+void confidence_ellipse(std::span<const double> x,
+                        std::span<const double> y,
+                        double nsigma,
+                        std::vector<double>& x_ellipse,
+                        std::vector<double>& y_ellipse,
+                        std::size_t points = 200);
+
 }  // namespace gnuplotpp

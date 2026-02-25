@@ -20,6 +20,12 @@ enum class OutputFormat { Pdf, Svg, Eps, Png };
 /** @brief Figure-wide palette selection for automatic series colors. */
 enum class ColorPalette { Default, Tab10, Viridis, Grayscale };
 
+/** @brief Heatmap colormap palette selection. */
+enum class ColorMap { Viridis, Cividis, Turbo, Magma, CoolWarm, Gray };
+
+/** @brief Color normalization mode for color-mapped plots. */
+enum class ColorNorm { Linear, Log };
+
 /** @brief Text rendering mode used by terminal setup. */
 enum class TextMode { Enhanced, Plain, LaTeX };
 
@@ -61,12 +67,15 @@ struct FigureSpec {
   int cols = 1;
   std::vector<OutputFormat> formats{OutputFormat::Pdf};
   std::string title;
+  std::string caption;
+  bool panel_labels = false;
   bool write_manifest = false;
   bool share_x = false;
   bool share_y = false;
   bool hide_inner_tick_labels = false;
   bool auto_layout = true;
   bool interactive_preview = false;
+  std::vector<std::string> font_fallbacks{"Helvetica", "Arial", "Times"};
 };
 
 /** @brief Legend placement presets. */
@@ -130,6 +139,14 @@ struct AxesSpec {
   bool legend = true;
   LegendSpec legend_spec{};
   bool enable_crosshair = false;
+  ColorMap color_map = ColorMap::Viridis;
+  ColorNorm color_norm = ColorNorm::Linear;
+  std::string colorbar_label;
+  bool has_cbrange = false;
+  double cbmin = 0.0;
+  double cbmax = 1.0;
+  bool has_cbtick_step = false;
+  double cbtick_step = 0.1;
 
   bool has_xlim = false;
   double xmin = 0.0;

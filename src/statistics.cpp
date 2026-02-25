@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <numeric>
+#include <limits>
 
 namespace gnuplotpp {
 
@@ -182,6 +183,161 @@ std::vector<double> autocorrelation(std::span<const double> y, std::size_t max_l
     ac[lag] = c / var;
   }
   return ac;
+}
+
+namespace {
+double inv_norm_cdf(const double p) {
+  // Acklam approximation.
+  static constexpr double a1 = -3.969683028665376e+01;
+  static constexpr double a2 = 2.209460984245205e+02;
+  static constexpr double a3 = -2.759285104469687e+02;
+  static constexpr double a4 = 1.383577518672690e+02;
+  static constexpr double a5 = -3.066479806614716e+01;
+  static constexpr double a6 = 2.506628277459239e+00;
+  static constexpr double b1 = -5.447609879822406e+01;
+  static constexpr double b2 = 1.615858368580409e+02;
+  static constexpr double b3 = -1.556989798598866e+02;
+  static constexpr double b4 = 6.680131188771972e+01;
+  static constexpr double b5 = -1.328068155288572e+01;
+  static constexpr double c1 = -7.784894002430293e-03;
+  static constexpr double c2 = -3.223964580411365e-01;
+  static constexpr double c3 = -2.400758277161838e+00;
+  static constexpr double c4 = -2.549732539343734e+00;
+  static constexpr double c5 = 4.374664141464968e+00;
+  static constexpr double c6 = 2.938163982698783e+00;
+  static constexpr double d1 = 7.784695709041462e-03;
+  static constexpr double d2 = 3.224671290700398e-01;
+  static constexpr double d3 = 2.445134137142996e+00;
+  static constexpr double d4 = 3.754408661907416e+00;
+  static constexpr double p_low = 0.02425;
+  static constexpr double p_high = 1 - p_low;
+
+  if (p <= 0.0) return -std::numeric_limits<double>::infinity();
+  if (p >= 1.0) return std::numeric_limits<double>::infinity();
+  double q = 0.0;
+  double r = 0.0;
+  if (p < p_low) {
+    q = std::sqrt(-2 * std::log(p));
+    return (((((c1 * q + c2) * q + c3) * q + c4) * q + c5) * q + c6) /
+           ((((d1 * q + d2) * q + d3) * q + d4) * q + 1);
+  }
+  if (p > p_high) {
+    q = std::sqrt(-2 * std::log(1 - p));
+    return -(((((c1 * q + c2) * q + c3) * q + c4) * q + c5) * q + c6) /
+           ((((d1 * q + d2) * q + d3) * q + d4) * q + 1);
+  }
+  q = p - 0.5;
+  r = q * q;
+  return (((((a1 * r + a2) * r + a3) * r + a4) * r + a5) * r + a6) * q /
+         (((((b1 * r + b2) * r + b3) * r + b4) * r + b5) * r + 1);
+}
+}  // namespace
+
+void qq_plot_normal(std::span<const double> samples,
+                    std::vector<double>& theo,
+                    std::vector<double>& samp) {
+  samp.assign(samples.begin(), samples.end());
+  std::sort(samp.begin(), samp.end());
+  theo.resize(samp.size());
+  const double n = static_cast<double>(samp.size());
+  for (std::size_t i = 0; i < samp.size(); ++i) {
+    const double p = (static_cast<double>(i) + 0.5) / n;
+    theo[i] = inv_norm_cdf(p);
+  }
+}
+
+BoxSummary box_summary(std::span<const double> samples) {
+  BoxSummary b{};
+  if (samples.empty()) {
+    return b;
+  }
+  std::vector<double> v(samples.begin(), samples.end());
+  std::sort(v.begin(), v.end());
+  const auto q_at = [&](double p) {
+    const double x = p * static_cast<double>(v.size() - 1);
+    const std::size_t i0 = static_cast<std::size_t>(std::floor(x));
+    const std::size_t i1 = static_cast<std::size_t>(std::ceil(x));
+    const double t = x - static_cast<double>(i0);
+    return v[i0] * (1.0 - t) + v[i1] * t;
+  };
+  b.q1 = q_at(0.25);
+  b.median = q_at(0.5);
+  b.q3 = q_at(0.75);
+  const double iqr = b.q3 - b.q1;
+  const double lo = b.q1 - 1.5 * iqr;
+  const double hi = b.q3 + 1.5 * iqr;
+  b.whisker_low = v.front();
+  b.whisker_high = v.back();
+  for (double e : v) {
+    if (e >= lo) {
+      b.whisker_low = e;
+      break;
+    }
+  }
+  for (auto it = v.rbegin(); it != v.rend(); ++it) {
+    if (*it <= hi) {
+      b.whisker_high = *it;
+      break;
+    }
+  }
+  return b;
+}
+
+void confidence_ellipse(std::span<const double> x,
+                        std::span<const double> y,
+                        const double nsigma,
+                        std::vector<double>& x_ellipse,
+                        std::vector<double>& y_ellipse,
+                        const std::size_t points) {
+  x_ellipse.clear();
+  y_ellipse.clear();
+  if (x.size() != y.size() || x.empty() || points < 4) {
+    return;
+  }
+  const std::size_t n = x.size();
+  double mx = 0.0;
+  double my = 0.0;
+  for (std::size_t i = 0; i < n; ++i) {
+    mx += x[i];
+    my += y[i];
+  }
+  mx /= static_cast<double>(n);
+  my /= static_cast<double>(n);
+
+  double sxx = 0.0, syy = 0.0, sxy = 0.0;
+  for (std::size_t i = 0; i < n; ++i) {
+    const double dx = x[i] - mx;
+    const double dy = y[i] - my;
+    sxx += dx * dx;
+    syy += dy * dy;
+    sxy += dx * dy;
+  }
+  const double den = static_cast<double>(std::max<std::size_t>(1, n - 1));
+  sxx /= den;
+  syy /= den;
+  sxy /= den;
+
+  const double tr = sxx + syy;
+  const double det = sxx * syy - sxy * sxy;
+  const double disc = std::sqrt(std::max(0.0, tr * tr * 0.25 - det));
+  const double l1 = std::max(0.0, tr * 0.5 + disc);
+  const double l2 = std::max(0.0, tr * 0.5 - disc);
+  const double angle = 0.5 * std::atan2(2.0 * sxy, sxx - syy);
+  const double ca = std::cos(angle);
+  const double sa = std::sin(angle);
+  const double a = nsigma * std::sqrt(l1);
+  const double b = nsigma * std::sqrt(l2);
+
+  x_ellipse.resize(points);
+  y_ellipse.resize(points);
+  constexpr double two_pi = 6.28318530717958647692;
+  for (std::size_t i = 0; i < points; ++i) {
+    const double th = two_pi * static_cast<double>(i) / static_cast<double>(points - 1);
+    const double ex = a * std::cos(th);
+    const double ey = b * std::sin(th);
+    x_ellipse[i] = mx + ca * ex - sa * ey;
+    y_ellipse[i] = my + sa * ex + ca * ey;
+  }
 }
 
 }  // namespace gnuplotpp
