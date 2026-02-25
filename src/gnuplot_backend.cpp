@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
+#include <cmath>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -72,6 +73,46 @@ bool is_ieee_preset(const Preset preset) {
   return preset == Preset::IEEE_SingleColumn || preset == Preset::IEEE_DoubleColumn;
 }
 
+bool is_hex_digit(const char c) {
+  return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+}
+
+bool is_hex_rgb(const std::string& color) {
+  if (color.size() != 7 || color.front() != '#') {
+    return false;
+  }
+  for (std::size_t i = 1; i < color.size(); ++i) {
+    if (!is_hex_digit(color[i])) {
+      return false;
+    }
+  }
+  return true;
+}
+
+std::string clamp_opacity_color(const std::string& color, const double opacity) {
+  const double clamped = std::clamp(opacity, 0.0, 1.0);
+  if (!is_hex_rgb(color)) {
+    return color;
+  }
+  const int alpha =
+      static_cast<int>(std::lround(clamped * 255.0));  // gnuplot expects AARRGGBB
+  std::ostringstream os;
+  os << "#" << std::hex << std::setfill('0') << std::nouppercase << std::setw(2) << alpha
+     << color.substr(1);
+  return os.str();
+}
+
+bool has_custom_color_or_opacity(const Figure& fig) {
+  for (const auto& axis : fig.all_axes()) {
+    for (const auto& series : axis.series()) {
+      if (series.spec.has_color || series.spec.has_opacity) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 std::string terminal_for(OutputFormat format, const FigureSpec& spec) {
   std::ostringstream os;
   os << std::fixed << std::setprecision(3);
@@ -109,32 +150,50 @@ std::string with_clause(const SeriesData& series,
       series.spec.has_line_width ? series.spec.line_width_pt : style.line_width_pt;
   const bool ieee = is_ieee_preset(preset);
   const int dt = static_cast<int>(series_idx % 7U) + 1;
+  std::string color;
+  if (series.spec.has_color) {
+    color = series.spec.color;
+  } else if (ieee || series.spec.has_opacity) {
+    color = "#000000";
+  }
+  if (series.spec.has_opacity) {
+    color = clamp_opacity_color(color, series.spec.opacity);
+  }
 
   std::ostringstream os;
   os << std::fixed << std::setprecision(3);
   switch (series.spec.type) {
     case SeriesType::Line:
       os << "with lines lw " << std::max(0.5, line_width);
+      if (!color.empty()) {
+        os << " lc rgb '" << color << "'";
+      }
       if (ieee) {
-        os << " lc rgb '#000000' dt " << dt;
+        os << " dt " << dt;
       }
       break;
     case SeriesType::Scatter:
       os << "with points pt 7 ps " << std::max(0.5, style.point_size);
-      if (ieee) {
-        os << " lc rgb '#000000'";
+      if (!color.empty()) {
+        os << " lc rgb '" << color << "'";
       }
       break;
     case SeriesType::ErrorBars:
       os << "with yerrorbars lw " << std::max(0.5, line_width);
+      if (!color.empty()) {
+        os << " lc rgb '" << color << "'";
+      }
       if (ieee) {
-        os << " lc rgb '#000000' dt " << dt;
+        os << " dt " << dt;
       }
       break;
     case SeriesType::Band:
       os << "with lines lw " << std::max(0.5, line_width);
+      if (!color.empty()) {
+        os << " lc rgb '" << color << "'";
+      }
       if (ieee) {
-        os << " lc rgb '#000000' dt " << dt;
+        os << " dt " << dt;
       }
       break;
   }
@@ -147,6 +206,7 @@ void emit_plot_body(std::ostream& os,
   const auto& spec = fig.spec();
   const auto& all_axes = fig.all_axes();
   const bool ieee = is_ieee_preset(spec.preset);
+  const bool custom_color_or_opacity = has_custom_color_or_opacity(fig);
   const double tick_font_pt = ieee ? 8.0 : spec.style.font_pt;
   const double label_font_pt = ieee ? 8.5 : spec.style.font_pt;
   const double title_font_pt = ieee ? 8.5 : spec.style.font_pt;
@@ -161,7 +221,7 @@ void emit_plot_body(std::ostream& os,
   os << "set ytics font '" << esc(spec.style.font) << "," << tick_font_pt << "'\n";
   os << "set format x '%.2g'\n";
   os << "set format y '%.2g'\n";
-  if (ieee) {
+  if (ieee && !custom_color_or_opacity) {
     os << "set monochrome\n";
   }
   os << "set key noopaque\n";

@@ -45,8 +45,18 @@ int main() {
   const std::vector<double> t{0.0, 1.0, 2.0};
   const std::vector<double> ep{2.0, 1.0, 0.5};
   const std::vector<double> ev{0.4, 0.3, 0.2};
+  const std::vector<double> ep_mc{1.8, 1.1, 0.6};
 
   fig.axes(0, 0).add_series(SeriesSpec{.label = "SRIF"}, t, ep);
+  fig.axes(0, 0).add_series(SeriesSpec{.label = "MC",
+                                       .has_line_width = true,
+                                       .line_width_pt = 0.6,
+                                       .has_color = true,
+                                       .color = "#000000",
+                                       .has_opacity = true,
+                                       .opacity = 0.25},
+                            t,
+                            ep_mc);
   fig.axes(0, 1).add_series(SeriesSpec{.label = "SRIF"}, t, ev);
 
   const auto out_dir = std::filesystem::temp_directory_path() / "gnuplotpp_backend_test";
@@ -62,8 +72,9 @@ int main() {
   const auto script = read_file(result.script_path);
   assert(script.find("set multiplot layout 1,2") != std::string::npos);
   assert(script.find("set terminal pdfcairo") != std::string::npos);
-  assert(script.find("set monochrome") != std::string::npos);
+  assert(script.find("set monochrome") == std::string::npos);
   assert(script.find("dt 1") != std::string::npos);
+  assert(script.find("lc rgb '#40000000'") != std::string::npos);
   assert(script.find("plot") != std::string::npos);
 
   const auto data0 = out_dir / "tmp" / "ax0_series0.dat";

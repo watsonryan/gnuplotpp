@@ -12,6 +12,9 @@ void Axes::add_series(const SeriesSpec& spec,
   if (x.size() != y.size()) {
     throw std::invalid_argument("x and y must have the same length");
   }
+  if (spec.has_opacity && (spec.opacity < 0.0 || spec.opacity > 1.0)) {
+    throw std::invalid_argument("series opacity must be in [0, 1]");
+  }
 
   SeriesData data;
   data.spec = spec;

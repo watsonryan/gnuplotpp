@@ -84,6 +84,15 @@ struct SeriesSpec {
   std::string label;
   bool has_line_width = false;
   double line_width_pt = 1.0;
+  /** @brief Optional explicit line/point color (e.g., "#112233"). */
+  bool has_color = false;
+  std::string color = "#000000";
+  /**
+   * @brief Optional opacity in [0, 1].
+   * @note Backends map this to gnuplot ARGB color strings when possible.
+   */
+  bool has_opacity = false;
+  double opacity = 1.0;
 };
 
 /** @brief In-memory series samples used by backends for emission/rendering. */

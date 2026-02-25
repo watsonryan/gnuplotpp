@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <memory>
+#include <stdexcept>
 #include <vector>
 
 namespace {
@@ -37,6 +38,15 @@ int main() {
   const std::vector<double> x{0.0, 1.0, 2.0};
   const std::vector<double> y{1.0, 2.0, 3.0};
   fig.axes(0, 0).add_series(SeriesSpec{.label = "line"}, x, y);
+  bool threw = false;
+  try {
+    fig.axes(0, 0).add_series(SeriesSpec{.label = "bad", .has_opacity = true, .opacity = 1.2},
+                              x,
+                              y);
+  } catch (const std::invalid_argument&) {
+    threw = true;
+  }
+  assert(threw);
 
   assert(fig.axes(0, 0).series().size() == 1U);
   const auto no_backend = fig.save("out");

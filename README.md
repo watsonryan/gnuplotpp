@@ -61,9 +61,10 @@ flowchart LR
 When using `IEEE_SingleColumn` or `IEEE_DoubleColumn`, renderer behavior is tightened to print-safe defaults:
 
 - 8.5 pt Times-style text defaults
-- monochrome plotting (`set monochrome`)
+- monochrome plotting by default (`set monochrome`)
 - dashed line-style differentiation per series (`dt 1..N`)
-- SciencePlots-like axis defaults: inward mirrored ticks, visible minor ticks, thin 0.5 axis/grid strokes
+- per-series color/opacity overrides disable global monochrome automatically
+- SciencePlots-like axis defaults: visible minor ticks, thin 0.5 axis/grid strokes
 - vector-first outputs (`PDF`, `SVG`, `EPS`)
 
 ## Examples
@@ -72,6 +73,7 @@ When using `IEEE_SingleColumn` or `IEEE_DoubleColumn`, renderer behavior is tigh
 ./build/dev-debug/two_window_example --out out/two_window
 ./build/dev-debug/layout_2x2_example --out out/layout_2x2
 ./build/dev-debug/three_line_ieee_example --out out/three_line_ieee
+./build/dev-debug/monte_carlo_alpha_example --out out/monte_carlo_alpha
 ```
 
 ### Annotated IEEE Example

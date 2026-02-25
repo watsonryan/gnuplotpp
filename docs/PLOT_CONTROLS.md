@@ -73,6 +73,10 @@ s.type = gnuplotpp::SeriesType::Line; // Line, Scatter, ErrorBars, Band
 s.label = "SRIF";
 s.has_line_width = true;
 s.line_width_pt = 1.6;
+s.has_color = true;
+s.color = "#000000";       // RGB hex
+s.has_opacity = true;
+s.opacity = 0.15;          // [0,1], converted to ARGB for gnuplot
 ```
 
 ## Data and Rendering
@@ -90,6 +94,28 @@ auto result = fig.save("out/my_run/figures");
 ```
 
 ## Figure Recipes
+
+### 0) Monte-Carlo Density (Many Lines, No Legend, Low Opacity)
+
+```cpp
+gnuplotpp::AxesSpec ax;
+ax.legend = false;
+ax.grid = true;
+fig.axes(0).set(ax);
+
+for (int k = 0; k < 1000; ++k) {
+  gnuplotpp::SeriesSpec s;
+  s.type = gnuplotpp::SeriesType::Line;
+  s.label = "";
+  s.has_line_width = true;
+  s.line_width_pt = 0.5;
+  s.has_color = true;
+  s.color = "#000000";
+  s.has_opacity = true;
+  s.opacity = 0.08;
+  fig.axes(0).add_series(s, t, y_mc[k]);
+}
+```
 
 ### 1) Single IEEE Plot (1x1)
 
@@ -152,8 +178,20 @@ For each render:
 - `tmp/ax*_series*.dat`
 - `tmp/gnuplot.log`
 
+## Object Transparency (Native gnuplot Commands)
+
+Use `AxesSpec::gnuplot_commands` for transparent filled objects:
+
+```cpp
+ax.gnuplot_commands = {
+  "set object 1 rect from graph 0.05,0.80 to graph 0.35,0.95 "
+  "fc rgb '#000000' fs transparent solid 0.10 noborder"
+};
+```
+
 ## Existing End-to-End Examples
 
 - `examples/two_window_example.cpp`
 - `examples/layout_2x2_example.cpp`
 - `examples/three_line_ieee_example.cpp`
+- `examples/monte_carlo_alpha_example.cpp`
