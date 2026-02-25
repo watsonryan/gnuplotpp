@@ -1,6 +1,6 @@
 # gnuplotpp
 
-Pure C++20 plotting API with a gnuplot renderer for publication-ready IEEE/AIAA figures.
+Pure C++20 plotting API with a gnuplot renderer for figures.
 
 ## Requirements
 
