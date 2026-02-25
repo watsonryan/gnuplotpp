@@ -12,6 +12,8 @@ This document is the full control reference for `gnuplotpp` plotting.
 - `gnuplotpp::gaussian_kde`
 - `gnuplotpp::FigureBuilder`
 - `gnuplotpp::save_theme_json` / `gnuplotpp::load_theme_json`
+- `gnuplotpp::read_csv_numeric`
+- `gnuplotpp::facet_grid` / `gnuplotpp::apply_facet_axes`
 
 ## Figure-Level Controls (`FigureSpec`)
 
@@ -30,6 +32,8 @@ fs.write_manifest = true; // emits out/.../manifest.json
 fs.share_x = true;
 fs.share_y = true;
 fs.hide_inner_tick_labels = true;
+fs.auto_layout = true;
+fs.interactive_preview = true; // emits tmp/interactive_preview.gp
 
 // Optional manual style override
 fs.style.font = "Times";
@@ -146,6 +150,26 @@ fig.axes(0).add_series({.label="ECDF", .use_y2=true}, ex, ep);
 auto smoothed = gnuplotpp::moving_average(signal, 8);
 auto reduced = gnuplotpp::downsample_uniform(signal, 4);
 auto ac = gnuplotpp::autocorrelation(signal, 50);
+
+std::vector<std::vector<double>> fan_lo, fan_hi;
+gnuplotpp::fan_chart_bands(ensemble, {0.1, 0.25, 0.75, 0.9}, fan_lo, fan_hi);
+
+std::vector<double> vy, vw;
+gnuplotpp::violin_profile(samples, vy, vw, 120);
+```
+
+### CSV + Faceting
+
+```cpp
+auto tbl = gnuplotpp::read_csv_numeric("signals.csv");
+auto [rows, cols] = gnuplotpp::facet_grid(6);
+fs.rows = rows;
+fs.cols = cols;
+gnuplotpp::Figure fig(fs);
+gnuplotpp::AxesSpec base;
+base.xlabel = gnuplotpp::label_with_unit("time", "s");
+base.ylabel = gnuplotpp::label_with_unit("error", "m");
+gnuplotpp::apply_facet_axes(fig, base, {"A","B","C","D","E","F"});
 ```
 
 ## Data and Rendering
@@ -271,3 +295,4 @@ ax.gnuplot_commands = {
 - `examples/three_line_ieee_example.cpp`
 - `examples/monte_carlo_alpha_example.cpp`
 - `examples/feature_rich_showcase.cpp`
+- `examples/interactive_facet_example.cpp`
