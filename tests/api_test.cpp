@@ -75,6 +75,9 @@ int main() {
   assert(spec.palette == ColorPalette::Grayscale);
   assert(!spec.style.grid);
   assert(spec.style.line_width_pt >= 1.5);
+  assert(spec.style.label_font_scale > 1.0);
+  assert(spec.style.title_font_scale > spec.style.label_font_scale);
+  assert(spec.style.title_bold);
 
   FigureSpec built_spec = FigureBuilder(spec).layout(1, 1).manifest(true).spec();
   assert(built_spec.write_manifest);

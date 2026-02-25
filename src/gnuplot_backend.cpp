@@ -439,9 +439,12 @@ void emit_plot_body(std::ostream& os,
   const bool ieee = is_ieee_preset(spec.preset);
   const bool custom_color_or_opacity = has_custom_color_or_opacity(fig);
   const bool heatmap = has_heatmap(fig);
-  const double tick_font_pt = ieee ? 8.0 : spec.style.font_pt;
-  const double label_font_pt = ieee ? 8.5 : spec.style.font_pt;
-  const double title_font_pt = ieee ? 8.5 : spec.style.font_pt;
+  const double tick_font_pt =
+      ieee ? 8.0 : spec.style.font_pt * std::max(0.1, spec.style.tick_font_scale);
+  const double label_font_pt =
+      ieee ? 8.5 : spec.style.font_pt * std::max(0.1, spec.style.label_font_scale);
+  const double title_font_pt =
+      ieee ? 8.5 : spec.style.font_pt * std::max(0.1, spec.style.title_font_scale);
 
   os << "set border linewidth 0.9 linecolor rgb '#222222'\n";
   os << "set tics in nomirror scale 0.5,0.25\n";
@@ -478,6 +481,12 @@ void emit_plot_body(std::ostream& os,
   for (std::size_t axis_idx = 0; axis_idx < all_axes.size(); ++axis_idx) {
     const auto& axis = all_axes[axis_idx];
     const auto& axis_spec = axis.spec();
+    const double axis_tick_font_pt =
+        axis_spec.has_tick_font_pt ? axis_spec.tick_font_pt : tick_font_pt;
+    const double axis_label_font_pt =
+        axis_spec.has_label_font_pt ? axis_spec.label_font_pt : label_font_pt;
+    const double axis_title_font_pt =
+        axis_spec.has_title_font_pt ? axis_spec.title_font_pt : title_font_pt;
     emit_auto_layout(os, spec, axis_spec);
 
     os << "unset title\n";
@@ -494,6 +503,8 @@ void emit_plot_body(std::ostream& os,
     os << "unset y2tics\n";
     os << "set format x '%.2g'\n";
     os << "set format y '%.2g'\n";
+    os << "set xtics font '" << esc(spec.style.font) << "," << axis_tick_font_pt << "'\n";
+    os << "set ytics font '" << esc(spec.style.font) << "," << axis_tick_font_pt << "'\n";
 
     const bool legend_enabled = axis_spec.legend && axis_spec.legend_spec.enabled;
     if (legend_enabled) {
@@ -517,20 +528,23 @@ void emit_plot_body(std::ostream& os,
     }
 
     if (!axis_spec.title.empty()) {
-      os << "set title '" << esc(axis_spec.title) << "' font '" << esc(spec.style.font) << ","
-         << title_font_pt << "'\n";
+      const bool title_bold = axis_spec.has_title_bold ? axis_spec.title_bold : spec.style.title_bold;
+      const std::string title_text = title_bold ? "{/:Bold " + esc(axis_spec.title) + "}"
+                                                : esc(axis_spec.title);
+      os << "set title '" << title_text << "' font '" << esc(spec.style.font) << ","
+         << axis_title_font_pt << "'\n";
     }
     if (!axis_spec.xlabel.empty()) {
       os << "set xlabel '" << esc(axis_spec.xlabel) << "' font '" << esc(spec.style.font) << ","
-         << label_font_pt << "'\n";
+         << axis_label_font_pt << "'\n";
     }
     if (!axis_spec.ylabel.empty()) {
       os << "set ylabel '" << esc(axis_spec.ylabel) << "' font '" << esc(spec.style.font) << ","
-         << label_font_pt << "'\n";
+         << axis_label_font_pt << "'\n";
     }
     if (!axis_spec.y2label.empty()) {
       os << "set y2label '" << esc(axis_spec.y2label) << "' font '" << esc(spec.style.font) << ","
-         << label_font_pt << "'\n";
+         << axis_label_font_pt << "'\n";
     }
 
     if (axis_spec.grid || spec.style.grid) {
@@ -538,7 +552,7 @@ void emit_plot_body(std::ostream& os,
     }
     if (!axis_spec.colorbar_label.empty()) {
       os << "set cblabel '" << esc(axis_spec.colorbar_label) << "' font '" << esc(spec.style.font)
-         << "," << label_font_pt << "'\n";
+         << "," << axis_label_font_pt << "'\n";
     }
     if (axis_spec.has_cbrange) {
       os << "set cbrange [" << axis_spec.cbmin << ":" << axis_spec.cbmax << "]\n";

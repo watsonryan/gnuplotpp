@@ -15,42 +15,6 @@
 
 namespace {
 
-std::string gp_escape(const std::string& text) {
-  std::string out;
-  out.reserve(text.size());
-  for (char c : text) {
-    if (c == '\'') {
-      out += "''";
-    } else {
-      out += c;
-    }
-  }
-  return out;
-}
-
-void apply_large_typography(gnuplotpp::AxesSpec& ax,
-                            const double label_pt = 17.0,
-                            const double title_pt = 20.0) {
-  std::vector<std::string> commands;
-  if (!ax.xlabel.empty()) {
-    commands.push_back("set xlabel '" + gp_escape(ax.xlabel) + "' font 'Helvetica," +
-                       std::to_string(label_pt) + "'");
-  }
-  if (!ax.ylabel.empty()) {
-    commands.push_back("set ylabel '" + gp_escape(ax.ylabel) + "' font 'Helvetica," +
-                       std::to_string(label_pt) + "'");
-  }
-  if (!ax.y2label.empty()) {
-    commands.push_back("set y2label '" + gp_escape(ax.y2label) + "' font 'Helvetica," +
-                       std::to_string(label_pt) + "'");
-  }
-  if (!ax.title.empty()) {
-    commands.push_back("set title '{/:Bold " + gp_escape(ax.title) + "}' font 'Helvetica," +
-                       std::to_string(title_pt) + "'");
-  }
-  ax.gnuplot_commands.insert(ax.gnuplot_commands.end(), commands.begin(), commands.end());
-}
-
 gnuplotpp::FigureSpec make_spec(const std::string& title) {
   using namespace gnuplotpp;
   FigureSpec fs;
@@ -61,12 +25,6 @@ gnuplotpp::FigureSpec make_spec(const std::string& title) {
   fs.title = title;
   fs.text_mode = TextMode::Enhanced;
   fs.formats = {OutputFormat::Pdf, OutputFormat::Png, OutputFormat::Svg};
-  fs.palette = ColorPalette::Grayscale;
-  fs.style.font = "Helvetica";
-  fs.style.font_pt = 13.5;
-  fs.style.line_width_pt = 1.8;
-  fs.style.point_size = 0.85;
-  fs.style.grid = false;
   fs.font_fallbacks = {"Arial", "Nimbus Sans", "DejaVu Sans", "Helvetica"};
   fs.panel_labels = false;
   fs.caption.clear();
@@ -127,7 +85,6 @@ int main(int argc, char** argv) {
     ax.xtick_step = 1.0;
     ax.has_ytick_step = true;
     ax.ytick_step = 1.0;
-    apply_large_typography(ax);
     fig.axes(0).set(ax);
 
     std::vector<double> q_theory, q_sample;
@@ -184,7 +141,6 @@ int main(int argc, char** argv) {
     ax.ymax = 3.2;
     ax.has_xtick_step = true;
     ax.xtick_step = 0.25;
-    apply_large_typography(ax);
     fig.axes(0).set(ax);
 
     std::vector<double> y_grid, half_w;
@@ -217,7 +173,6 @@ int main(int argc, char** argv) {
             std::to_string(summary.median) + " nohead lw 2.0 lc rgb '#1f1f1f' front",
         "set arrow 22 from -0.30," + std::to_string(summary.q3) + " to 0.30," +
             std::to_string(summary.q3) + " nohead lw 1.5 lc rgb '#1f1f1f' dt 2 front"};
-    apply_large_typography(ax);
     fig.axes(0).set(ax);
 
     fig.axes(0).add_series(SeriesSpec{.label = "left",
@@ -271,7 +226,6 @@ int main(int argc, char** argv) {
     ax.xmax = 1.3;
     ax.has_xtick_step = true;
     ax.xtick_step = 0.1;
-    apply_large_typography(ax);
     fig.axes(0).set(ax);
 
     const auto box = box_summary(samples);
@@ -281,7 +235,6 @@ int main(int argc, char** argv) {
     ax.ymin = *smin_it - ypad;
     ax.ymax = *smax_it + ypad;
     ax.gnuplot_commands = {"set xtics ('Sample A' 1.0) font 'Helvetica,13'"};
-    apply_large_typography(ax);
     fig.axes(0).set(ax);
 
     std::vector<double> x_pts;
@@ -317,7 +270,6 @@ int main(int argc, char** argv) {
             std::to_string(box.whisker_low) + " nohead lw 1.5 lc rgb '#1f1f1f'",
         "set arrow 5 from 0.95," + std::to_string(box.whisker_high) + " to 1.05," +
             std::to_string(box.whisker_high) + " nohead lw 1.5 lc rgb '#1f1f1f'"};
-    apply_large_typography(ax);
     fig.axes(0).set(ax);
 
     if (render(fig, out_root / "box_summary" / "figures") != 0) return 1;
@@ -328,7 +280,7 @@ int main(int argc, char** argv) {
     auto fs = make_spec("Confidence Ellipse");
     Figure fig(fs);
     AxesSpec ax;
-    ax.title = "2-Sigma Confidence Ellipse";
+    ax.title = "1/2/3-Sigma Confidence Ellipses";
     ax.xlabel = "x";
     ax.ylabel = "y";
     ax.grid = true;
@@ -338,7 +290,6 @@ int main(int argc, char** argv) {
     ax.legend_spec.opaque = true;
     ax.legend_spec.has_font_pt = true;
     ax.legend_spec.font_pt = 13.0;
-    apply_large_typography(ax);
     fig.axes(0).set(ax);
 
     std::normal_distribution<double> nx(0.0, 1.0);
@@ -359,16 +310,36 @@ int main(int argc, char** argv) {
                            x,
                            y);
 
-    std::vector<double> ex, ey;
-    confidence_ellipse(x, y, 2.0, ex, ey, 240);
+    std::vector<double> ex1, ey1;
+    std::vector<double> ex2, ey2;
+    std::vector<double> ex3, ey3;
+    confidence_ellipse(x, y, 1.0, ex1, ey1, 240);
+    confidence_ellipse(x, y, 2.0, ex2, ey2, 240);
+    confidence_ellipse(x, y, 3.0, ex3, ey3, 240);
+    fig.axes(0).add_series(
+        SeriesSpec{.label = "1{/Symbol s} ellipse",
+                   .has_line_width = true,
+                   .line_width_pt = 2.0,
+                   .has_color = true,
+                   .color = "#1f77b4"},
+        ex1,
+        ey1);
     fig.axes(0).add_series(
         SeriesSpec{.label = "2{/Symbol s} ellipse",
                    .has_line_width = true,
                    .line_width_pt = 2.8,
                    .has_color = true,
                    .color = "#e45756"},
-        ex,
-        ey);
+        ex2,
+        ey2);
+    fig.axes(0).add_series(
+        SeriesSpec{.label = "3{/Symbol s} ellipse",
+                   .has_line_width = true,
+                   .line_width_pt = 2.0,
+                   .has_color = true,
+                   .color = "#2ca02c"},
+        ex3,
+        ey3);
 
     if (render(fig, out_root / "confidence_ellipse" / "figures") != 0) return 1;
   }
@@ -398,7 +369,6 @@ int main(int argc, char** argv) {
     ax.xtick_step = 10.0;
     ax.has_ytick_step = true;
     ax.ytick_step = 0.2;
-    apply_large_typography(ax);
     fig.axes(0).set(ax);
 
     std::vector<double> sig(800);

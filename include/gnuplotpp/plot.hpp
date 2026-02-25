@@ -54,6 +54,10 @@ struct Style {
   double line_width_pt = 1.0;
   double point_size = 0.6;
   bool grid = false;
+  double tick_font_scale = 1.0;
+  double label_font_scale = 1.0;
+  double title_font_scale = 1.0;
+  bool title_bold = false;
 };
 
 /** @brief High-level figure configuration. */
@@ -174,6 +178,14 @@ struct AxesSpec {
   int yminor_count = 2;
   std::string xformat;
   std::string yformat;
+  bool has_tick_font_pt = false;
+  double tick_font_pt = 8.0;
+  bool has_label_font_pt = false;
+  double label_font_pt = 9.0;
+  bool has_title_font_pt = false;
+  double title_font_pt = 9.0;
+  bool has_title_bold = false;
+  bool title_bold = false;
 
   std::vector<LabelAnnotation> labels;
   std::vector<ArrowAnnotation> arrows;

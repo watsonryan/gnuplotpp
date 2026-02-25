@@ -96,6 +96,10 @@ void apply_style_profile(FigureSpec& spec, StyleProfile profile) {
       spec.style.font_pt = 9.0;
       spec.style.line_width_pt = 1.5;
       spec.style.grid = true;
+      spec.style.tick_font_scale = 0.95;
+      spec.style.label_font_scale = 1.05;
+      spec.style.title_font_scale = 1.12;
+      spec.style.title_bold = false;
       spec.palette = ColorPalette::Tab10;
       break;
     case StyleProfile::IEEE_Strict:
@@ -103,6 +107,10 @@ void apply_style_profile(FigureSpec& spec, StyleProfile profile) {
       spec.style.font_pt = 8.5;
       spec.style.line_width_pt = 1.0;
       spec.style.grid = false;
+      spec.style.tick_font_scale = 1.0;
+      spec.style.label_font_scale = 1.0;
+      spec.style.title_font_scale = 1.0;
+      spec.style.title_bold = false;
       spec.palette = ColorPalette::Grayscale;
       break;
     case StyleProfile::AIAA_Strict:
@@ -110,6 +118,10 @@ void apply_style_profile(FigureSpec& spec, StyleProfile profile) {
       spec.style.font_pt = 8.0;
       spec.style.line_width_pt = 1.0;
       spec.style.grid = false;
+      spec.style.tick_font_scale = 1.0;
+      spec.style.label_font_scale = 1.0;
+      spec.style.title_font_scale = 1.0;
+      spec.style.title_bold = false;
       spec.palette = ColorPalette::Default;
       break;
     case StyleProfile::Presentation:
@@ -117,6 +129,10 @@ void apply_style_profile(FigureSpec& spec, StyleProfile profile) {
       spec.style.font_pt = 12.0;
       spec.style.line_width_pt = 2.0;
       spec.style.grid = true;
+      spec.style.tick_font_scale = 1.0;
+      spec.style.label_font_scale = 1.15;
+      spec.style.title_font_scale = 1.25;
+      spec.style.title_bold = true;
       spec.palette = ColorPalette::Viridis;
       break;
     case StyleProfile::DarkPrintSafe:
@@ -124,14 +140,22 @@ void apply_style_profile(FigureSpec& spec, StyleProfile profile) {
       spec.style.font_pt = 9.0;
       spec.style.line_width_pt = 1.6;
       spec.style.grid = true;
+      spec.style.tick_font_scale = 1.0;
+      spec.style.label_font_scale = 1.08;
+      spec.style.title_font_scale = 1.15;
+      spec.style.title_bold = true;
       spec.palette = ColorPalette::Grayscale;
       break;
     case StyleProfile::Tufte_Minimal:
       spec.style.font = "Helvetica";
-      spec.style.font_pt = 10.0;
+      spec.style.font_pt = 12.5;
       spec.style.line_width_pt = 1.8;
       spec.style.point_size = 0.6;
       spec.style.grid = false;
+      spec.style.tick_font_scale = 1.0;
+      spec.style.label_font_scale = 1.30;
+      spec.style.title_font_scale = 1.55;
+      spec.style.title_bold = true;
       spec.palette = ColorPalette::Grayscale;
       break;
   }

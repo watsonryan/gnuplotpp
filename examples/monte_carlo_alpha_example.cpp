@@ -39,10 +39,6 @@ int main(int argc, char** argv) {
   fs.cols = 1;
   fs.formats = {OutputFormat::Pdf, OutputFormat::Png, OutputFormat::Svg, OutputFormat::Eps};
   fs.size = FigureSizeInches{.w = 5.8, .h = 3.4};
-  fs.style.font = "Helvetica";
-  fs.style.font_pt = 12.5;
-  fs.style.line_width_pt = 1.6;
-  fs.style.grid = false;
   {
     std::ostringstream title;
     title << "Monte Carlo Ensemble (N=" << n_paths << ", alpha=" << alpha << ")";
@@ -53,6 +49,7 @@ int main(int argc, char** argv) {
   Figure fig(fs);
 
   AxesSpec ax;
+  ax.title = plot_title;
   ax.xlabel = "t [s]";
   ax.ylabel = "x(t)";
   ax.grid = false;
@@ -65,10 +62,7 @@ int main(int argc, char** argv) {
   ax.gnuplot_commands = {
       "set border 3 linewidth 0.8 linecolor rgb '#1c1c1c'",
       "set tics out nomirror",
-      "set arrow 10 from graph 0, first 0 to graph 1, first 0 nohead lc rgb '#9a9a9a' dt 3 lw 0.8 back",
-      "set xlabel 't [s]' font 'Helvetica,16'",
-      "set ylabel 'x(t)' font 'Helvetica,16'",
-      "set title '{/:Bold " + plot_title + "}' font 'Helvetica,18'"};
+      "set arrow 10 from graph 0, first 0 to graph 1, first 0 nohead lc rgb '#9a9a9a' dt 3 lw 0.8 back"};
   fig.axes(0).set(ax);
 
   std::vector<double> t;
