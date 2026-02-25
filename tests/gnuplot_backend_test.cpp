@@ -26,6 +26,7 @@ int main() {
   spec.rows = 1;
   spec.cols = 2;
   spec.formats = {OutputFormat::Pdf};
+  spec.export_policy.drop_line_alpha_for_vector = false;
 
   Figure fig(spec);
 

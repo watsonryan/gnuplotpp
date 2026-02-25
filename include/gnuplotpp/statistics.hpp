@@ -109,6 +109,13 @@ struct BoxSummary {
   double whisker_high = 0.0;
 };
 
+/** @brief Linear least-squares fit summary. */
+struct LinearFitResult {
+  double slope = 0.0;
+  double intercept = 0.0;
+  double r2 = 0.0;
+};
+
 /**
  * @brief Compute boxplot summary using Tukey 1.5*IQR whiskers.
  * @param samples Input data.
@@ -131,5 +138,21 @@ void confidence_ellipse(std::span<const double> x,
                         std::vector<double>& x_ellipse,
                         std::vector<double>& y_ellipse,
                         std::size_t points = 200);
+
+/**
+ * @brief Fit y = slope*x + intercept.
+ * @param x X samples.
+ * @param y Y samples.
+ * @return Fit summary.
+ */
+LinearFitResult linear_fit(std::span<const double> x, std::span<const double> y);
+
+/**
+ * @brief Evaluate linear fit on x values.
+ * @param fit Fit coefficients.
+ * @param x X samples.
+ * @return Fitted y values.
+ */
+std::vector<double> linear_fit_line(const LinearFitResult& fit, std::span<const double> x);
 
 }  // namespace gnuplotpp

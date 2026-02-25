@@ -156,7 +156,8 @@ RenderResult GnuplotBackend::render(const Figure& fig, const std::filesystem::pa
   const bool any_series_opacity = detail::has_series_opacity(fig);
 
   for (const auto format : fig.spec().formats) {
-    if (any_series_opacity && !detail::format_supports_line_alpha(format)) {
+    if (any_series_opacity && !detail::format_supports_line_alpha(format) &&
+        fig.spec().export_policy.warn_line_alpha_on_vector) {
       gnuplotpp::log::Warn("line opacity requested but ", detail::format_name(format),
                            " terminal may ignore alpha; prefer PNG for true line transparency");
     }
@@ -169,7 +170,7 @@ RenderResult GnuplotBackend::render(const Figure& fig, const std::filesystem::pa
 
     script_os << detail::terminal_for(format, fig.spec()) << "\n";
     script_os << "set output " << gnuplot_quote(output_path) << "\n";
-    detail::emit_plot_body(script_os, fig, data_files);
+    detail::emit_plot_body(script_os, fig, data_files, format);
     script_os << "set output\n";
   }
   if (!script_os.good()) {
@@ -194,7 +195,7 @@ RenderResult GnuplotBackend::render(const Figure& fig, const std::filesystem::pa
     if (preview_os.is_open()) {
       preview_os << "set encoding utf8\n";
       preview_os << "set terminal qt persist\n";
-      detail::emit_plot_body(preview_os, fig, data_files);
+      detail::emit_plot_body(preview_os, fig, data_files, OutputFormat::Png);
       preview_os << "pause mouse close\n";
     } else {
       gnuplotpp::log::Warn("failed to write interactive preview script: ", preview_path.string());

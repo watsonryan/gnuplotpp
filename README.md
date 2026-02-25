@@ -19,10 +19,14 @@ Pure C++20 plotting API with a gnuplot renderer for figures.
 - Journal-like presets (`IEEE_Tran`, `Nature_1Col`, `Elsevier_1Col`)
 - Style profiles (`Science`, `IEEE_Strict`, `AIAA_Strict`, `Presentation`, `DarkPrintSafe`, `Tufte_Minimal`)
 - Typed annotations/objects (labels, arrows, rectangles)
+- Typed equation/callout annotations (`equations`, `callouts`)
 - Fluent `FigureBuilder` API
 - Quick-start helpers (`make_quick_figure_spec`, `make_quick_figure`, `make_quick_axes`)
+- One-shot publication helper (`make_publication_figure`)
 - Theme JSON save/load (`save_theme_json` / `load_theme_json`)
 - Data transforms (`moving_average`, `downsample_uniform`, `autocorrelation`)
+- Transform pipeline (`TransformPipeline`, z-score/clip/rolling)
+- Statistical model overlays (`linear_fit`, `add_linear_fit_overlay`)
 - CSV ingestion and unit-aware labels (`read_csv_numeric`, `label_with_unit`)
 - Faceting helpers (`facet_grid`, `apply_facet_axes`)
 - Composition helpers (`apply_panel_titles`, `apply_shared_legend`, `apply_shared_colorbar_label`)
@@ -31,6 +35,7 @@ Pure C++20 plotting API with a gnuplot renderer for figures.
 - Template gallery and quick templates (`apply_plot_template`, `write_template_gallery_yaml`)
 - DataTable column plotting adapters (`add_line`, `add_scatter`)
 - Versioned theme presets (`ThemePreset::*_v1`)
+- CLI renderer (`gnuplotpp_cli --spec ... --out ...`)
 - Font fallback chain for cross-format typography consistency
 - Reproducibility manifest export (`manifest.json`)
 
@@ -129,6 +134,7 @@ When using `IEEE_SingleColumn` or `IEEE_DoubleColumn`, renderer behavior is tigh
 ./build/dev-debug/feature_rich_showcase --out out/feature_rich_showcase
 ./build/dev-debug/interactive_facet_example --out out/interactive_facet_example
 ./build/dev-debug/yaml_spec_example --out out/yaml_spec_example
+./build/dev-debug/gnuplotpp_cli --spec examples/specs/minimal.yaml --out out/cli_run
 ./build/dev-debug/stats_plot_examples --out out/stats_plot_examples
 ./build/dev-debug/tufte_minimal_example --out out/tufte_minimal_example
 ```

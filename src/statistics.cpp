@@ -340,4 +340,46 @@ void confidence_ellipse(std::span<const double> x,
   }
 }
 
+LinearFitResult linear_fit(std::span<const double> x, std::span<const double> y) {
+  LinearFitResult fit{};
+  if (x.size() != y.size() || x.size() < 2) {
+    return fit;
+  }
+  const std::size_t n = x.size();
+  double sx = 0.0, sy = 0.0, sxx = 0.0, sxy = 0.0;
+  for (std::size_t i = 0; i < n; ++i) {
+    sx += x[i];
+    sy += y[i];
+    sxx += x[i] * x[i];
+    sxy += x[i] * y[i];
+  }
+  const double den = static_cast<double>(n) * sxx - sx * sx;
+  if (std::abs(den) < 1e-15) {
+    return fit;
+  }
+  fit.slope = (static_cast<double>(n) * sxy - sx * sy) / den;
+  fit.intercept = (sy - fit.slope * sx) / static_cast<double>(n);
+
+  const double y_mean = sy / static_cast<double>(n);
+  double ss_tot = 0.0;
+  double ss_res = 0.0;
+  for (std::size_t i = 0; i < n; ++i) {
+    const double yh = fit.slope * x[i] + fit.intercept;
+    const double dt = y[i] - y_mean;
+    const double dr = y[i] - yh;
+    ss_tot += dt * dt;
+    ss_res += dr * dr;
+  }
+  fit.r2 = ss_tot > 0.0 ? std::max(0.0, 1.0 - ss_res / ss_tot) : 0.0;
+  return fit;
+}
+
+std::vector<double> linear_fit_line(const LinearFitResult& fit, std::span<const double> x) {
+  std::vector<double> yhat(x.size(), 0.0);
+  for (std::size_t i = 0; i < x.size(); ++i) {
+    yhat[i] = fit.slope * x[i] + fit.intercept;
+  }
+  return yhat;
+}
+
 }  // namespace gnuplotpp

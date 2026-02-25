@@ -1,6 +1,7 @@
 #include "gnuplotpp/builder.hpp"
 #include "gnuplotpp/data.hpp"
 #include "gnuplotpp/facet.hpp"
+#include "gnuplotpp/model_overlays.hpp"
 #include "gnuplotpp/plot.hpp"
 #include "gnuplotpp/presets.hpp"
 #include "gnuplotpp/quickstart.hpp"
@@ -8,6 +9,7 @@
 #include "gnuplotpp/statistics.hpp"
 #include "gnuplotpp/templates.hpp"
 #include "gnuplotpp/theme.hpp"
+#include "gnuplotpp/transforms.hpp"
 
 #include <cassert>
 #include <fstream>
@@ -96,6 +98,15 @@ int main() {
   auto quick_fig = make_quick_figure(
       QuickFigureOptions{.preset = Preset::IEEE_SingleColumn, .profile = StyleProfile::Science});
   assert(quick_fig.spec().rows == 1);
+  auto pub_fig = make_publication_figure(PublicationFigureOptions{
+      .preset = Preset::IEEE_SingleColumn,
+      .profile = StyleProfile::IEEE_Strict,
+      .figure_title = "pub",
+      .axes_title = "signal",
+      .xlabel = "t",
+      .ylabel = "x"});
+  assert(pub_fig.spec().title == "pub");
+  assert(pub_fig.axes(0).spec().title == "signal");
   const auto quick_ax = make_quick_axes("A", "x", "y", true, false);
   assert(quick_ax.grid);
   assert(!quick_ax.legend);
@@ -106,6 +117,14 @@ int main() {
   assert(!ds.empty());
   const auto ac = autocorrelation(y, 2);
   assert(ac.size() == 3);
+  const auto fit = linear_fit(x, y);
+  assert(fit.r2 > 0.99);
+  const auto yhat = linear_fit_line(fit, x);
+  assert(yhat.size() == x.size());
+  Figure fit_fig(spec);
+  fit_fig.axes(0, 0).set(AxesSpec{});
+  const auto fit_overlay = add_linear_fit_overlay(fit_fig.axes(0, 0), x, y, "fit");
+  assert(fit_overlay.r2 > 0.99);
 
   std::vector<double> ex;
   std::vector<double> ep;
@@ -148,6 +167,13 @@ int main() {
   assert(tbl.has_column("pos"));
   assert(tbl.row_count() == 2U);
   assert(label_with_unit("position", "m") == "position [m]");
+  const auto z = transform_zscore(tbl.column("pos"));
+  assert(z.size() == tbl.column("pos").size());
+  const auto clipped = transform_clip(z, -0.5, 0.5);
+  assert(clipped.size() == z.size());
+  TransformPipeline pipe;
+  pipe.set_input(std::vector<double>{1.0, 2.0, 3.0, 4.0}).rolling_mean(2).zscore().clip(-1.0, 1.0);
+  assert(pipe.values().size() == 4U);
   std::filesystem::remove(csv_path);
 
   const auto rc = facet_grid(5);
@@ -240,6 +266,7 @@ int main() {
   Figure composition_fig(composition_spec);
   for (int i = 0; i < 4; ++i) {
     composition_fig.axes(i).set(AxesSpec{});
+    composition_fig.axes(i).add_series(SeriesSpec{.label = "s"}, x, y);
   }
   apply_panel_titles(composition_fig, {"A", "B", "C", "D"});
   assert(composition_fig.axes(2).spec().title == "C");
@@ -252,12 +279,21 @@ int main() {
   apply_shared_colorbar_label(composition_fig, "density", 3);
   assert(composition_fig.axes(3).spec().colorbar_label == "density");
   assert(composition_fig.axes(0).spec().colorbar_label.empty());
+  apply_small_multiples_defaults(composition_fig, true, true);
+  assert(composition_fig.axes(0).spec().has_xlim);
 
   std::vector<double> lx{0.0, 1.0, 2.0, 3.0};
   std::vector<double> ly{0.0, 0.1, 0.2, 1.5};
   AxesSpec auto_leg_ax;
   auto_place_legend(auto_leg_ax, lx, ly);
   assert(auto_leg_ax.legend);
+  auto_leg_ax.equations.push_back({.expression = "y=mx+b",
+                                   .at = Coord2D{.system = CoordSystem::Graph, .x = 0.05, .y = 0.95},
+                                   .boxed = true});
+  auto_leg_ax.callouts.push_back({.text = "peak",
+                                  .from = Coord2D{.system = CoordSystem::Data, .x = 2.0, .y = 0.2},
+                                  .to = Coord2D{.system = CoordSystem::Data, .x = 3.0, .y = 1.5}});
+  assert(!auto_leg_ax.equations.empty());
 
   Figure table_fig(spec);
   AxesSpec table_ax;

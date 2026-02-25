@@ -29,6 +29,9 @@ enum class ColorNorm { Linear, Log };
 /** @brief Text rendering mode used by terminal setup. */
 enum class TextMode { Enhanced, Plain, LaTeX };
 
+/** @brief Coordinate system used by typed annotations. */
+enum class CoordSystem { Data, Graph, Screen };
+
 /** @brief Built-in publication presets for size and style defaults. */
 enum class Preset {
   IEEE_SingleColumn,
@@ -60,6 +63,12 @@ struct Style {
   bool title_bold = false;
 };
 
+/** @brief Export behavior knobs for format-specific rendering policy. */
+struct ExportPolicy {
+  bool drop_line_alpha_for_vector = true;
+  bool warn_line_alpha_on_vector = true;
+};
+
 /** @brief High-level figure configuration. */
 struct FigureSpec {
   Preset preset = Preset::IEEE_SingleColumn;
@@ -80,6 +89,7 @@ struct FigureSpec {
   bool auto_layout = true;
   bool interactive_preview = false;
   std::vector<std::string> font_fallbacks{"Helvetica", "Arial", "Times"};
+  ExportPolicy export_policy{};
 };
 
 /** @brief Legend placement presets. */
@@ -131,6 +141,32 @@ struct RectObject {
   bool border = false;
   std::string border_color = "#000000";
   bool front = false;
+};
+
+/** @brief Typed coordinate pair for annotation placement. */
+struct Coord2D {
+  CoordSystem system = CoordSystem::Data;
+  double x = 0.0;
+  double y = 0.0;
+};
+
+/** @brief Typed equation label annotation. */
+struct EquationAnnotation {
+  std::string expression;
+  Coord2D at{};
+  bool boxed = false;
+  bool front = true;
+};
+
+/** @brief Typed callout with arrow and attached text. */
+struct CalloutAnnotation {
+  std::string text;
+  Coord2D from{};
+  Coord2D to{};
+  bool heads = true;
+  double line_width_pt = 1.0;
+  std::string color = "#000000";
+  bool front = true;
 };
 
 /** @brief Axes typography overrides (optional). */
@@ -248,6 +284,8 @@ struct AxesSpec {
   std::vector<LabelAnnotation> labels;
   std::vector<ArrowAnnotation> arrows;
   std::vector<RectObject> rectangles;
+  std::vector<EquationAnnotation> equations;
+  std::vector<CalloutAnnotation> callouts;
 
   // Optional raw gnuplot commands for advanced annotations (arrows/labels/etc).
   std::vector<std::string> gnuplot_commands;

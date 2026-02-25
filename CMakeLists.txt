@@ -34,11 +34,13 @@ add_library(gnuplotpp
   src/figure.cpp
   src/gnuplot_backend.cpp
   src/gnuplot_backend_emit.cpp
+  src/model_overlays.cpp
   src/presets.cpp
   src/spec_yaml.cpp
   src/statistics.cpp
   src/templates.cpp
   src/theme.cpp
+  src/transforms.cpp
 )
 
 add_library(gnuplotpp::gnuplotpp ALIAS gnuplotpp)
@@ -82,6 +84,9 @@ else()
 endif()
 
 if(BUILD_EXAMPLES)
+  add_executable(gnuplotpp_cli apps/gnuplotpp_cli.cpp)
+  target_link_libraries(gnuplotpp_cli PRIVATE gnuplotpp::gnuplotpp)
+
   add_executable(two_window_example examples/two_window_example.cpp)
   target_link_libraries(two_window_example PRIVATE gnuplotpp::gnuplotpp)
 

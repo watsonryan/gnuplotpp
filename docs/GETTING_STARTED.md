@@ -31,6 +31,7 @@ Run a ready example:
 
 ```bash
 ./build/dev-debug/two_window_example --out out/two_window
+./build/dev-debug/gnuplotpp_cli --spec examples/specs/minimal.yaml --out out/cli_run
 ```
 
 Output files appear under:
@@ -74,6 +75,19 @@ fig.axes(0).set(ax);
 fig.axes(0).add_series({.label = "signal"}, t, y);
 fig.set_backend(make_gnuplot_backend());
 fig.save("out/quick_plot/figures");
+```
+
+## One-Shot Publication Helper
+
+```cpp
+auto fig = gnuplotpp::make_publication_figure({
+  .preset = gnuplotpp::Preset::IEEE_SingleColumn,
+  .profile = gnuplotpp::StyleProfile::IEEE_Strict,
+  .figure_title = "Results",
+  .axes_title = "State Estimate",
+  .xlabel = "t [s]",
+  .ylabel = "x(t)"
+});
 ```
 
 ## Important Notes

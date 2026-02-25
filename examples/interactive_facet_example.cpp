@@ -97,6 +97,7 @@ int main(int argc, char** argv) {
   shared_legend.columns = 1;
   shared_legend.boxed = true;
   apply_shared_legend(fig, shared_legend, 0);
+  apply_small_multiples_defaults(fig, true, true);
 
   if (example_common::render_figure(fig, out_dir / "figures") != 0) {
     return 1;

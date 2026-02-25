@@ -65,4 +65,14 @@ LegendPosition auto_legend_position(std::span<const double> x, std::span<const d
  */
 void auto_place_legend(AxesSpec& ax, std::span<const double> x, std::span<const double> y);
 
+/**
+ * @brief Apply shared-range/tick defaults for small multiples.
+ * @param fig Figure to update.
+ * @param sync_x_limits Enable global x-range across panels.
+ * @param sync_y_limits Enable global y-range across panels.
+ */
+void apply_small_multiples_defaults(Figure& fig,
+                                    bool sync_x_limits = true,
+                                    bool sync_y_limits = true);
+
 }  // namespace gnuplotpp

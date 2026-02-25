@@ -13,12 +13,15 @@ This document is the full control reference for `gnuplotpp` plotting.
 - `gnuplotpp::FigureBuilder`
 - `gnuplotpp::make_quick_figure_spec` / `gnuplotpp::make_quick_figure` / `gnuplotpp::make_quick_axes`
 - `gnuplotpp::save_theme_json` / `gnuplotpp::load_theme_json`
+- `gnuplotpp::apply_theme_preset`
 - `gnuplotpp::read_csv_numeric`
 - `gnuplotpp::facet_grid` / `gnuplotpp::apply_facet_axes`
 - `gnuplotpp::apply_panel_titles` / `gnuplotpp::apply_shared_legend` / `gnuplotpp::apply_shared_colorbar_label`
 - `gnuplotpp::auto_legend_position` / `gnuplotpp::auto_place_legend`
 - `gnuplotpp::load_yaml_figure_spec`
 - `gnuplotpp::apply_plot_template`
+- `gnuplotpp::linear_fit` / `gnuplotpp::add_linear_fit_overlay`
+- `gnuplotpp::TransformPipeline`
 
 ## Figure-Level Controls (`FigureSpec`)
 
@@ -42,6 +45,8 @@ fs.interactive_preview = true; // emits tmp/interactive_preview.gp
 fs.panel_labels = true;
 fs.caption = "Figure caption text";
 fs.font_fallbacks = {"Helvetica", "Arial", "Times"};
+fs.export_policy.drop_line_alpha_for_vector = true;
+fs.export_policy.warn_line_alpha_on_vector = true;
 
 // Optional manual style override
 fs.style.font = "Times";
@@ -150,6 +155,18 @@ ax.rectangles.push_back({
   .fill_color="#99ccee"
 });
 
+// Typed equation/callout annotations
+ax.equations.push_back({
+  .expression = "y = mx + b",
+  .at = {.system = gnuplotpp::CoordSystem::Graph, .x = 0.05, .y = 0.93},
+  .boxed = true
+});
+ax.callouts.push_back({
+  .text = "trend",
+  .from = {.system = gnuplotpp::CoordSystem::Graph, .x = 0.70, .y = 0.80},
+  .to = {.system = gnuplotpp::CoordSystem::Data, .x = 15.0, .y = 1.2}
+});
+
 // Optional advanced gnuplot commands (annotation, arrows, etc.)
 ax.gnuplot_commands = {
   "set label 1 'e_p(t)=e_0 e^{-{/Symbol l} t}' at 14,10.8 font 'Times,8' front",
@@ -188,6 +205,12 @@ fig.axes(0).add_series({.label="ECDF", .use_y2=true}, ex, ep);
 auto smoothed = gnuplotpp::moving_average(signal, 8);
 auto reduced = gnuplotpp::downsample_uniform(signal, 4);
 auto ac = gnuplotpp::autocorrelation(signal, 50);
+auto fit = gnuplotpp::linear_fit(x, y);
+auto yfit = gnuplotpp::linear_fit_line(fit, x);
+gnuplotpp::add_linear_fit_overlay(fig.axes(0), x, y, "linear fit");
+
+gnuplotpp::TransformPipeline pipeline;
+pipeline.set_input(signal).rolling_mean(5).zscore().clip(-3.0, 3.0);
 
 std::vector<std::vector<double>> fan_lo, fan_hi;
 gnuplotpp::fan_chart_bands(ensemble, {0.1, 0.25, 0.75, 0.9}, fan_lo, fan_hi);

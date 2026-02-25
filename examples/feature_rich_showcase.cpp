@@ -1,9 +1,11 @@
 #include "example_common.hpp"
 #include "gnuplotpp/builder.hpp"
+#include "gnuplotpp/model_overlays.hpp"
 #include "gnuplotpp/plot.hpp"
 #include "gnuplotpp/presets.hpp"
 #include "gnuplotpp/statistics.hpp"
 #include "gnuplotpp/theme.hpp"
+#include "gnuplotpp/transforms.hpp"
 
 #include <cmath>
 #include <filesystem>
@@ -26,6 +28,8 @@ gnuplotpp::FigureSpec base_spec(const std::string& title) {
            .palette(ColorPalette::Tab10)
            .manifest(true)
            .spec();
+  fs.export_policy.drop_line_alpha_for_vector = true;
+  fs.export_policy.warn_line_alpha_on_vector = false;
   fs.text_mode = TextMode::Enhanced;
   // Screen-review readable while still IEEE-like in proportions.
   fs.style.font = "Helvetica";
@@ -122,9 +126,11 @@ int main(int argc, char** argv) {
     band.has_opacity = true;
     band.opacity = 0.20;
     fig.axes(0).add_band(band, t, lo, hi);
-    fig.axes(0).add_series(SeriesSpec{.label = "mean", .has_line_width = true, .line_width_pt = 2.8},
-                           t,
-                           mean);
+    const auto mean_smooth = transform_rolling_mean(mean, 5);
+    fig.axes(0).add_series(
+        SeriesSpec{.label = "mean", .has_line_width = true, .line_width_pt = 2.8}, t, mean_smooth);
+    const auto fit = add_linear_fit_overlay(fig.axes(0), t, mean_smooth, "linear fit");
+    (void)fit;
     std::vector<double> t_obs;
     std::vector<double> y_obs;
     for (int i = 0; i < 200; i += 10) {
@@ -134,6 +140,21 @@ int main(int argc, char** argv) {
     fig.axes(0).add_series(SeriesSpec{.type = SeriesType::Scatter, .label = "obs", .has_color = true, .color = "#444444"},
                            t_obs,
                            y_obs);
+    auto ax_anno = fig.axes(0).spec();
+    ax_anno.equations.push_back({.expression = "x(t)={/Symbol m} +/- 1.96{/Symbol s}",
+                                 .at = Coord2D{.system = CoordSystem::Graph, .x = 0.04, .y = 0.93},
+                                 .boxed = true});
+    const double trend_x_to = 15.0;
+    const double trend_y_to = fit.slope * trend_x_to + fit.intercept;
+    ax_anno.callouts.push_back({.text = "trend",
+                                .from = Coord2D{.system = CoordSystem::Graph, .x = 0.86, .y = 0.90},
+                                .to = Coord2D{.system = CoordSystem::Data,
+                                              .x = trend_x_to,
+                                              .y = trend_y_to},
+                                .heads = true,
+                                .line_width_pt = 1.1,
+                                .color = "#222222"});
+    fig.axes(0).set(ax_anno);
     if (example_common::render_figure(fig, out_dir / "mean_band" / "figures") != 0) {
       return 1;
     }

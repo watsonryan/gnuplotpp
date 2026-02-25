@@ -17,6 +17,7 @@ bool has_series_opacity(const Figure& fig);
 
 void emit_plot_body(std::ostream& os,
                     const Figure& fig,
-                    const std::vector<std::vector<std::filesystem::path>>& data_files);
+                    const std::vector<std::vector<std::filesystem::path>>& data_files,
+                    OutputFormat format);
 
 }  // namespace gnuplotpp::detail

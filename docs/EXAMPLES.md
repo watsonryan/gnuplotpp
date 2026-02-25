@@ -15,6 +15,7 @@ This file maps repository examples to practical use-cases.
 - `interactive_facet_example.cpp`: facet grid + interactive preview script.
 - `interactive_facet_example.cpp`: facet grid + shared legend + auto legend placement + DataTable column plotting.
 - `yaml_spec_example.cpp`: declarative plotting from YAML.
+- `gnuplotpp_cli`: command-line YAML renderer (`--spec`, `--out`).
 - `stats_plot_examples.cpp`: Q-Q, violin, box summary, confidence ellipses, autocorrelation.
 - `monte_carlo_alpha_example.cpp`: dense ensemble rendering + 3-sigma envelope.
 
@@ -26,6 +27,7 @@ This file maps repository examples to practical use-cases.
 ./build/dev-debug/stats_plot_examples --out out/stats_plot_examples
 ./build/dev-debug/monte_carlo_alpha_example --out out/monte_carlo_alpha_example --npaths 1000 --lw 2 --alpha 0.3
 ./build/dev-debug/yaml_spec_example --out out/yaml_spec_example
+./build/dev-debug/gnuplotpp_cli --spec examples/specs/minimal.yaml --out out/cli_run
 ```
 
 ## Where Outputs Go

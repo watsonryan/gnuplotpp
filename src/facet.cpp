@@ -126,4 +126,44 @@ void auto_place_legend(AxesSpec& ax, std::span<const double> x, std::span<const 
   ax.legend_spec.position = auto_legend_position(x, y);
 }
 
+void apply_small_multiples_defaults(Figure& fig,
+                                    const bool sync_x_limits,
+                                    const bool sync_y_limits) {
+  const auto& spec = fig.spec();
+  double gx_min = std::numeric_limits<double>::infinity();
+  double gx_max = -std::numeric_limits<double>::infinity();
+  double gy_min = std::numeric_limits<double>::infinity();
+  double gy_max = -std::numeric_limits<double>::infinity();
+  bool any = false;
+
+  for (const auto& ax : fig.all_axes()) {
+    for (const auto& s : ax.series()) {
+      for (std::size_t i = 0; i < s.x.size(); ++i) {
+        gx_min = std::min(gx_min, s.x[i]);
+        gx_max = std::max(gx_max, s.x[i]);
+        gy_min = std::min(gy_min, s.y[i]);
+        gy_max = std::max(gy_max, s.y[i]);
+        any = true;
+      }
+    }
+  }
+  if (!any) {
+    return;
+  }
+  for (int i = 0; i < spec.rows * spec.cols; ++i) {
+    auto ax = fig.axes(i).spec();
+    if (sync_x_limits) {
+      ax.has_xlim = true;
+      ax.xmin = gx_min;
+      ax.xmax = gx_max;
+    }
+    if (sync_y_limits) {
+      ax.has_ylim = true;
+      ax.ymin = gy_min;
+      ax.ymax = gy_max;
+    }
+    fig.axes(i).set(ax);
+  }
+}
+
 }  // namespace gnuplotpp

@@ -1,0 +1,16 @@
+figure:
+  title: "CLI YAML Demo"
+  preset: IEEE_SingleColumn
+  formats: [pdf, svg]
+axes:
+  - title: "Configured from YAML"
+    xlabel: "t [s]"
+    ylabel: "x(t)"
+    grid: true
+    legend: false
+    typography:
+      title_font_pt: 12
+      title_bold: true
+    frame:
+      border_mask: 3
+      ticks_out: true

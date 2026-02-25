@@ -23,6 +23,20 @@ struct QuickFigureOptions {
 };
 
 /**
+ * @brief High-level publication helper options.
+ */
+struct PublicationFigureOptions {
+  Preset preset = Preset::IEEE_SingleColumn;
+  StyleProfile profile = StyleProfile::IEEE_Strict;
+  std::string figure_title;
+  std::string axes_title;
+  std::string xlabel = "x";
+  std::string ylabel = "y";
+  bool grid = false;
+  bool legend = true;
+};
+
+/**
  * @brief Build a figure spec with preset + style profile already applied.
  * @param options Quick figure options.
  * @return Ready-to-use figure spec.
@@ -71,6 +85,31 @@ inline AxesSpec make_quick_axes(std::string title = {},
   ax.grid = grid;
   ax.legend = legend;
   return ax;
+}
+
+/**
+ * @brief Build one publication-ready figure+axes pair in one call.
+ * @param options Publication helper options.
+ * @return Figure with axis 0 configured.
+ */
+inline Figure make_publication_figure(const PublicationFigureOptions& options = {}) {
+  FigureSpec spec;
+  spec.preset = options.preset;
+  apply_preset_defaults(spec);
+  apply_style_profile(spec, options.profile);
+  spec.title = options.figure_title;
+  spec.rows = 1;
+  spec.cols = 1;
+  spec.formats = {OutputFormat::Pdf, OutputFormat::Svg, OutputFormat::Eps};
+  Figure fig(spec);
+  AxesSpec ax;
+  ax.title = options.axes_title;
+  ax.xlabel = options.xlabel;
+  ax.ylabel = options.ylabel;
+  ax.grid = options.grid;
+  ax.legend = options.legend;
+  fig.axes(0).set(ax);
+  return fig;
 }
 
 }  // namespace gnuplotpp

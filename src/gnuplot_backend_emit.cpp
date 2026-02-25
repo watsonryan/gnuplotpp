@@ -156,6 +156,24 @@ std::string using_clause(const SeriesData& series) {
   return "using 1:2";
 }
 
+std::string coord_token(const Coord2D& c) {
+  const char* mode = "first";
+  switch (c.system) {
+    case CoordSystem::Data:
+      mode = "first";
+      break;
+    case CoordSystem::Graph:
+      mode = "graph";
+      break;
+    case CoordSystem::Screen:
+      mode = "screen";
+      break;
+  }
+  std::ostringstream os;
+  os << mode << " " << c.x << "," << c.y;
+  return os.str();
+}
+
 std::string axes_clause(const SeriesData& series) {
   if (series.spec.use_y2) {
     return "axes x1y2";
@@ -167,7 +185,9 @@ std::string with_clause(const SeriesData& series,
                         const Style& style,
                         const Preset preset,
                         const ColorPalette palette,
-                        const std::size_t series_idx) {
+                        const std::size_t series_idx,
+                        const OutputFormat format,
+                        const ExportPolicy& export_policy) {
   const double line_width =
       series.spec.has_line_width ? series.spec.line_width_pt : style.line_width_pt;
   const bool ieee = is_ieee_preset(preset);
@@ -182,7 +202,11 @@ std::string with_clause(const SeriesData& series,
   } else {
     color = palette_color(palette, series_idx);
   }
-  if (series.spec.has_opacity) {
+  const bool supports_line_alpha = format == OutputFormat::Png;
+  const bool apply_line_alpha =
+      series.spec.has_opacity &&
+      !(export_policy.drop_line_alpha_for_vector && !supports_line_alpha);
+  if (apply_line_alpha) {
     color = clamp_opacity_color(color, series.spec.opacity);
   }
 
@@ -278,7 +302,7 @@ void emit_typed_objects(std::ostream& os, const AxesSpec& axis_spec) {
   int arrow_id = 1000;
   for (const auto& arr : axis_spec.arrows) {
     os << "set arrow " << arrow_id++ << " from " << arr.from << " to " << arr.to;
-    os << (arr.heads ? " heads " : " nohead ");
+    os << (arr.heads ? " head " : " nohead ");
     os << "lw " << std::max(0.2, arr.line_width_pt) << " lc rgb '" << arr.color << "'";
     if (arr.front) {
       os << " front";
@@ -301,6 +325,33 @@ void emit_typed_objects(std::ostream& os, const AxesSpec& axis_spec) {
       os << " noborder";
     }
     os << (rect.front ? " front" : " back") << "\n";
+  }
+
+  for (const auto& eq : axis_spec.equations) {
+    os << "set label " << label_id++ << " '" << esc(eq.expression) << "' at "
+       << coord_token(eq.at);
+    if (eq.boxed) {
+      os << " boxed";
+    }
+    if (eq.front) {
+      os << " front";
+    }
+    os << "\n";
+  }
+
+  for (const auto& c : axis_spec.callouts) {
+    os << "set arrow " << arrow_id++ << " from " << coord_token(c.from) << " to "
+       << coord_token(c.to) << (c.heads ? " head " : " nohead ") << "lw "
+       << std::max(0.2, c.line_width_pt) << " lc rgb '" << c.color << "'";
+    if (c.front) {
+      os << " front";
+    }
+    os << "\n";
+    os << "set label " << label_id++ << " '" << esc(c.text) << "' at " << coord_token(c.from);
+    if (c.front) {
+      os << " front";
+    }
+    os << "\n";
   }
 }
 
@@ -399,7 +450,8 @@ std::string terminal_for(OutputFormat format, const FigureSpec& spec) {
 
 void emit_plot_body(std::ostream& os,
                     const Figure& fig,
-                    const std::vector<std::vector<std::filesystem::path>>& data_files) {
+                    const std::vector<std::vector<std::filesystem::path>>& data_files,
+                    const OutputFormat format) {
   const auto& spec = fig.spec();
   const auto& all_axes = fig.all_axes();
   const bool ieee = is_ieee_preset(spec.preset);
@@ -647,7 +699,14 @@ void emit_plot_body(std::ostream& os,
       const auto& series = axis.series()[s];
       os << quote(data_files[axis_idx][s]) << " " << using_clause(series) << " "
          << axes_clause(series) << " "
-         << with_clause(series, spec.style, spec.preset, spec.palette, s) << " ";
+         << with_clause(series,
+                        spec.style,
+                        spec.preset,
+                        spec.palette,
+                        s,
+                        format,
+                        spec.export_policy)
+         << " ";
       if (series.spec.label.empty()) {
         os << "notitle";
       } else {
