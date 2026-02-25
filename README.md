@@ -90,12 +90,26 @@ cmake --build --preset build-debug --target refresh-readme-assets
 
 ```mermaid
 flowchart LR
-  A[FigureSpec / AxesSpec / SeriesSpec] --> B[Figure / Axes]
-  B --> C[IPlotBackend]
-  C --> D[GnuplotBackend]
-  D --> E[tmp/*.dat]
-  D --> F[tmp/figure.gp]
-  D --> G[figure.pdf / figure.svg / figure.eps]
+  subgraph Inputs
+    Y[YAML Spec]
+    C[CSV / Arrays]
+    CPP[C++ API]
+  end
+
+  Y --> CLI[gnuplotpp_cli]
+  C --> CLI
+  CPP --> Core[FigureSpec / AxesSpec / SeriesSpec]
+  CLI --> Core
+
+  Core --> Ops[Transforms + Model Overlays + Statistics]
+  Ops --> Fig[Figure / Axes]
+
+  Fig --> Backend[IPlotBackend]
+  Backend --> Gnuplot[GnuplotBackend]
+
+  Gnuplot --> Dat[tmp/*.dat]
+  Gnuplot --> Script[tmp/figure.gp]
+  Gnuplot --> Out[figure.pdf / figure.svg / figure.eps / figure.png]
 ```
 
 ## Publication Workflow

@@ -591,7 +591,7 @@ void emit_plot_body(std::ostream& os,
     }
 
     if (axis_spec.grid || spec.style.grid) {
-      os << "set grid xtics ytics linewidth 0.35 linecolor rgb '#e2e2e2'\n";
+      os << "set grid xtics ytics linewidth 0.60 linecolor rgb '#c8c8c8'\n";
     }
     if (!axis_spec.colorbar_label.empty()) {
       os << "set cblabel '" << esc(axis_spec.colorbar_label) << "' font '" << esc(spec.style.font)
