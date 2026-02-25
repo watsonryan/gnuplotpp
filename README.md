@@ -104,6 +104,7 @@ When using `IEEE_SingleColumn` or `IEEE_DoubleColumn`, renderer behavior is tigh
 ./build/dev-debug/feature_rich_showcase --out out/feature_rich_showcase
 ./build/dev-debug/interactive_facet_example --out out/interactive_facet_example
 ./build/dev-debug/yaml_spec_example --out out/yaml_spec_example
+./build/dev-debug/stats_plot_examples --out out/stats_plot_examples
 ```
 
 ### Annotated IEEE Example
@@ -115,6 +116,30 @@ Generated from:
 ```
 
 <img src="docs/images/three_line_ieee_example.svg" alt="Three-line IEEE example" width="900" />
+
+### Statistical Plot Gallery
+
+Generated from:
+
+```bash
+./build/dev-debug/stats_plot_examples --out out/stats_plot_examples
+```
+
+Normal Q-Q:
+
+<img src="docs/images/stats_qq_plot.png" alt="Normal Q-Q plot example" width="900" />
+
+Violin with raw samples:
+
+<img src="docs/images/stats_violin_profile.png" alt="Violin profile with sample points" width="900" />
+
+Confidence ellipse:
+
+<img src="docs/images/stats_confidence_ellipse.png" alt="2-sigma confidence ellipse" width="900" />
+
+Autocorrelation:
+
+<img src="docs/images/stats_autocorrelation.png" alt="Autocorrelation example" width="900" />
 
 Expected outputs:
 
