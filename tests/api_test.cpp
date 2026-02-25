@@ -205,7 +205,7 @@ int main() {
           "      ticks_out: true\n"
           "      ticks_mirror: false\n";
   }
-  const auto ys = load_yaml_figure_spec(yaml_path);
+  const auto ys = load_yaml_figure_spec(yaml_path, YamlLoadOptions{.strict_unknown_keys = true});
   assert(ys.figure.title == "yaml");
   assert(!ys.axes.empty());
   assert(ys.axes[0].y2label == "p(event)");

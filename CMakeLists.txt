@@ -18,6 +18,16 @@ if(GNUPLOTPP_ENABLE_LOGGING AND NOT GNUPLOTPP_ENABLE_CPM)
   find_package(spdlog CONFIG QUIET)
 endif()
 
+if(NOT GNUPLOTPP_ENABLE_CPM)
+  find_package(yaml-cpp CONFIG QUIET
+    PATHS
+      /opt/homebrew/opt/yaml-cpp
+      /usr/local/opt/yaml-cpp
+    PATH_SUFFIXES
+      lib/cmake/yaml-cpp
+      share/cmake/yaml-cpp)
+endif()
+
 add_library(gnuplotpp
   src/data.cpp
   src/facet.cpp
@@ -61,6 +71,14 @@ if(GNUPLOTPP_ENABLE_LOGGING)
     target_link_libraries(gnuplotpp PUBLIC spdlog::spdlog_header_only)
     target_compile_definitions(gnuplotpp PUBLIC GNUPLOTPP_HAS_SPDLOG=1)
   endif()
+endif()
+
+if(TARGET yaml-cpp::yaml-cpp)
+  target_link_libraries(gnuplotpp PUBLIC yaml-cpp::yaml-cpp)
+elseif(TARGET yaml-cpp)
+  target_link_libraries(gnuplotpp PUBLIC yaml-cpp)
+else()
+  message(FATAL_ERROR "yaml-cpp is required for YAML spec loading. Enable GNUPLOTPP_ENABLE_CPM=ON or install yaml-cpp.")
 endif()
 
 if(BUILD_EXAMPLES)
