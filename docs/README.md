@@ -18,3 +18,9 @@ This folder contains practical guides for using `gnuplotpp` from first plot to a
 3. Use [Examples Cookbook](EXAMPLES.md) as copy-paste templates.
 4. For stats workflows, use [Statistical Plot Guide](STATISTICS_GUIDE.md).
 5. If rendering/export issues appear, check [Troubleshooting](TROUBLESHOOTING.md).
+
+## Keep README Figures Fresh
+
+```bash
+cmake --build --preset build-debug --target refresh-readme-assets
+```

@@ -66,6 +66,14 @@ ctest --preset test-debug
 - [Troubleshooting](docs/TROUBLESHOOTING.md)
 - [Full Plot Controls](docs/PLOT_CONTROLS.md)
 
+Refresh all README figure assets from current examples:
+
+```bash
+cmake --build --preset build-debug --target refresh-readme-assets
+# or:
+./scripts/refresh_readme_assets.sh
+```
+
 ## Architecture
 
 ```mermaid
