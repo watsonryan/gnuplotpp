@@ -58,6 +58,23 @@ fig.set_backend(gnuplotpp::make_gnuplot_backend());
 auto result = fig.save("out/my_first_plot/figures");
 ```
 
+## Quick + Consistent Flow (Recommended)
+
+```cpp
+#include "gnuplotpp/quickstart.hpp"
+
+using namespace gnuplotpp;
+auto fig = make_quick_figure(QuickFigureOptions{
+    .preset = Preset::Custom,
+    .profile = StyleProfile::Tufte_Minimal,
+    .title = "My Plot"});
+auto ax = make_quick_axes("Response", "t [s]", "x(t)", false, true);
+fig.axes(0).set(ax);
+fig.axes(0).add_series({.label = "signal"}, t, y);
+fig.set_backend(make_gnuplot_backend());
+fig.save("out/quick_plot/figures");
+```
+
 ## Important Notes
 
 - Use `PNG` when you need line alpha/transparency to be exact.

@@ -20,6 +20,7 @@ Pure C++20 plotting API with a gnuplot renderer for figures.
 - Style profiles (`Science`, `IEEE_Strict`, `AIAA_Strict`, `Presentation`, `DarkPrintSafe`, `Tufte_Minimal`)
 - Typed annotations/objects (labels, arrows, rectangles)
 - Fluent `FigureBuilder` API
+- Quick-start helpers (`make_quick_figure_spec`, `make_quick_figure`, `make_quick_axes`)
 - Theme JSON save/load (`save_theme_json` / `load_theme_json`)
 - Data transforms (`moving_average`, `downsample_uniform`, `autocorrelation`)
 - CSV ingestion and unit-aware labels (`read_csv_numeric`, `label_with_unit`)

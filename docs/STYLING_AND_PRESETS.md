@@ -38,14 +38,27 @@ Typography is preset/profile-driven by default:
 If needed, override per-axis:
 
 ```cpp
-ax.has_tick_font_pt = true;
-ax.tick_font_pt = 11.0;
-ax.has_label_font_pt = true;
-ax.label_font_pt = 14.0;
-ax.has_title_font_pt = true;
-ax.title_font_pt = 16.0;
-ax.has_title_bold = true;
-ax.title_bold = true;
+ax.typography.has_tick_font_pt = true;
+ax.typography.tick_font_pt = 11.0;
+ax.typography.has_label_font_pt = true;
+ax.typography.label_font_pt = 14.0;
+ax.typography.has_title_font_pt = true;
+ax.typography.title_font_pt = 16.0;
+ax.typography.has_title_bold = true;
+ax.typography.title_bold = true;
+```
+
+For frame style consistency:
+
+```cpp
+ax.frame.has_border_mask = true;      // e.g. 3 = left+bottom only
+ax.frame.border_mask = 3;
+ax.frame.has_border_line_width_pt = true;
+ax.frame.border_line_width_pt = 0.8;
+ax.frame.has_ticks_out = true;
+ax.frame.ticks_out = true;
+ax.frame.has_ticks_mirror = true;
+ax.frame.ticks_mirror = false;
 ```
 
 ## Legend Control

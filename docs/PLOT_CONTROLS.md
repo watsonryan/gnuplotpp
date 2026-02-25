@@ -11,6 +11,7 @@ This document is the full control reference for `gnuplotpp` plotting.
 - `gnuplotpp::Axes`
 - `gnuplotpp::gaussian_kde`
 - `gnuplotpp::FigureBuilder`
+- `gnuplotpp::make_quick_figure_spec` / `gnuplotpp::make_quick_figure` / `gnuplotpp::make_quick_axes`
 - `gnuplotpp::save_theme_json` / `gnuplotpp::load_theme_json`
 - `gnuplotpp::read_csv_numeric`
 - `gnuplotpp::facet_grid` / `gnuplotpp::apply_facet_axes`
@@ -114,6 +115,28 @@ ax.yminor_count = 4;
 ax.xformat = "%.2f";
 ax.yformat = "%.2e";
 
+// Structured typography overrides
+ax.typography.has_tick_font_pt = true;
+ax.typography.tick_font_pt = 11.0;
+ax.typography.has_label_font_pt = true;
+ax.typography.label_font_pt = 14.0;
+ax.typography.has_title_font_pt = true;
+ax.typography.title_font_pt = 16.0;
+ax.typography.has_title_bold = true;
+ax.typography.title_bold = true;
+
+// Structured frame overrides
+ax.frame.has_border_mask = true;
+ax.frame.border_mask = 3; // left + bottom
+ax.frame.has_border_line_width_pt = true;
+ax.frame.border_line_width_pt = 0.8;
+ax.frame.has_border_color = true;
+ax.frame.border_color = "#1c1c1c";
+ax.frame.has_ticks_out = true;
+ax.frame.ticks_out = true;
+ax.frame.has_ticks_mirror = true;
+ax.frame.ticks_mirror = false;
+
 // Typed objects/annotations
 ax.labels.push_back({.text="region A", .at="graph 0.1,0.9", .font="Times,8"});
 ax.arrows.push_back({.from="graph 0.2,0.8", .to="graph 0.35,0.65", .heads=true});
@@ -215,6 +238,18 @@ fig.axes(0).add_series(s, x, y);
 
 fig.set_backend(gnuplotpp::make_gnuplot_backend());
 auto result = fig.save("out/my_run/figures");
+```
+
+## Quickstart Helpers
+
+```cpp
+using namespace gnuplotpp;
+auto fig = make_quick_figure(QuickFigureOptions{
+    .preset = Preset::Custom,
+    .profile = StyleProfile::Tufte_Minimal,
+    .title = "Quick Plot"});
+fig.axes(0).set(make_quick_axes("Response", "t [s]", "x(t)", false, true));
+fig.axes(0).add_series({.label = "signal"}, x, y);
 ```
 
 ## Figure Recipes
