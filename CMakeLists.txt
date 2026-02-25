@@ -23,6 +23,7 @@ add_library(gnuplotpp
   src/facet.cpp
   src/figure.cpp
   src/gnuplot_backend.cpp
+  src/gnuplot_backend_emit.cpp
   src/presets.cpp
   src/spec_yaml.cpp
   src/statistics.cpp
@@ -89,6 +90,13 @@ if(BUILD_EXAMPLES)
 
   add_executable(tufte_minimal_example examples/tufte_minimal_example.cpp)
   target_link_libraries(tufte_minimal_example PRIVATE gnuplotpp::gnuplotpp)
+
+  if(NOT WIN32)
+    add_custom_target(refresh-readme-assets
+      COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/scripts/refresh_readme_assets.sh ${CMAKE_BINARY_DIR}
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+      COMMENT "Regenerating README-linked figure assets from examples")
+  endif()
 endif()
 
 if(BUILD_TESTING)

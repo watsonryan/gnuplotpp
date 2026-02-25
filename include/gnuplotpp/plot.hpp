@@ -133,6 +133,32 @@ struct RectObject {
   bool front = false;
 };
 
+/** @brief Axes typography overrides (optional). */
+struct TypographySpec {
+  bool has_tick_font_pt = false;
+  double tick_font_pt = 8.0;
+  bool has_label_font_pt = false;
+  double label_font_pt = 9.0;
+  bool has_title_font_pt = false;
+  double title_font_pt = 9.0;
+  bool has_title_bold = false;
+  bool title_bold = false;
+};
+
+/** @brief Axes frame/tick style overrides (optional). */
+struct AxisFrameSpec {
+  bool has_border_mask = false;
+  int border_mask = 15;
+  bool has_border_line_width_pt = false;
+  double border_line_width_pt = 0.9;
+  bool has_border_color = false;
+  std::string border_color = "#222222";
+  bool has_ticks_out = false;
+  bool ticks_out = false;
+  bool has_ticks_mirror = false;
+  bool ticks_mirror = false;
+};
+
 /** @brief Axes-level labels, limits, and grid/log controls. */
 struct AxesSpec {
   std::string title;
@@ -178,6 +204,11 @@ struct AxesSpec {
   int yminor_count = 2;
   std::string xformat;
   std::string yformat;
+
+  TypographySpec typography{};
+  AxisFrameSpec frame{};
+
+  // Legacy typography overrides (kept for source compatibility).
   bool has_tick_font_pt = false;
   double tick_font_pt = 8.0;
   bool has_label_font_pt = false;
