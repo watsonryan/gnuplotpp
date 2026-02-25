@@ -62,6 +62,9 @@ if(BUILD_EXAMPLES)
 
   add_executable(layout_2x2_example examples/layout_2x2_example.cpp)
   target_link_libraries(layout_2x2_example PRIVATE gnuplotpp::gnuplotpp)
+
+  add_executable(three_line_ieee_example examples/three_line_ieee_example.cpp)
+  target_link_libraries(three_line_ieee_example PRIVATE gnuplotpp::gnuplotpp)
 endif()
 
 if(BUILD_TESTING)

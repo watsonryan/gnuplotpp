@@ -172,7 +172,7 @@ void emit_plot_body(std::ostream& os,
   const double title_font_pt = ieee ? 8.5 : spec.style.font_pt;
 
   os << "set border linewidth 1.2 linecolor rgb '#222222'\n";
-  os << "set tics in mirror scale 0.6,0.3\n";
+  os << "set tics in nomirror scale 0.6,0.3\n";
   os << "set mxtics 2\n";
   os << "set mytics 2\n";
   os << "set xtics font '" << esc(spec.style.font) << "," << tick_font_pt << "'\n";
@@ -184,8 +184,14 @@ void emit_plot_body(std::ostream& os,
   }
   os << "set key noopaque\n";
   os << "unset key\n";
+  bool emit_global_title = !spec.title.empty();
+  if (emit_global_title && spec.rows == 1 && spec.cols == 1 && !all_axes.empty() &&
+      !all_axes.front().spec().title.empty()) {
+    emit_global_title = false;
+  }
+
   os << "set multiplot layout " << spec.rows << "," << spec.cols;
-  if (!spec.title.empty()) {
+  if (emit_global_title) {
     os << " title '" << esc(spec.title) << "'";
   }
   os << "\n";
