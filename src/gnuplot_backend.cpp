@@ -172,7 +172,9 @@ void emit_plot_body(std::ostream& os,
   const double title_font_pt = ieee ? 8.5 : spec.style.font_pt;
 
   os << "set border linewidth 1.2 linecolor rgb '#222222'\n";
-  os << "set tics out nomirror scale 0.75\n";
+  os << "set tics in mirror scale 0.6,0.3\n";
+  os << "set mxtics 2\n";
+  os << "set mytics 2\n";
   os << "set xtics font '" << esc(spec.style.font) << "," << tick_font_pt << "'\n";
   os << "set ytics font '" << esc(spec.style.font) << "," << tick_font_pt << "'\n";
   os << "set format x '%.2g'\n";
@@ -180,7 +182,7 @@ void emit_plot_body(std::ostream& os,
   if (ieee) {
     os << "set monochrome\n";
   }
-  os << "set key opaque box linewidth 0.8\n";
+  os << "set key noopaque\n";
   os << "unset key\n";
   os << "set multiplot layout " << spec.rows << "," << spec.cols;
   if (!spec.title.empty()) {
@@ -205,6 +207,7 @@ void emit_plot_body(std::ostream& os,
       os << "set key top right\n";
       if (ieee) {
         os << "set key font '" << esc(spec.style.font) << ",8.0'\n";
+        os << "set key box linewidth 0.0\n";
       }
     } else {
       os << "unset key\n";

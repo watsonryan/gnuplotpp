@@ -10,17 +10,17 @@ PresetDefaults preset_defaults(Preset preset) {
       defaults.size = FigureSizeInches{.w = 3.5, .h = 2.5};
       defaults.style.font = "Times-New-Roman";
       defaults.style.font_pt = 8.5;
-      defaults.style.line_width_pt = 1.2;
-      defaults.style.point_size = 0.7;
-      defaults.style.grid = true;
+      defaults.style.line_width_pt = 1.3;
+      defaults.style.point_size = 0.8;
+      defaults.style.grid = false;
       break;
     case Preset::IEEE_DoubleColumn:
       defaults.size = FigureSizeInches{.w = 7.16, .h = 2.8};
       defaults.style.font = "Times-New-Roman";
       defaults.style.font_pt = 8.5;
-      defaults.style.line_width_pt = 1.2;
-      defaults.style.point_size = 0.7;
-      defaults.style.grid = true;
+      defaults.style.line_width_pt = 1.3;
+      defaults.style.point_size = 0.8;
+      defaults.style.grid = false;
       break;
     case Preset::AIAA_Column:
       defaults.size = FigureSizeInches{.w = 3.25, .h = 2.4};
