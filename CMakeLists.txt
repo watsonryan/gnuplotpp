@@ -22,6 +22,7 @@ add_library(gnuplotpp
   src/figure.cpp
   src/gnuplot_backend.cpp
   src/presets.cpp
+  src/statistics.cpp
 )
 
 add_library(gnuplotpp::gnuplotpp ALIAS gnuplotpp)

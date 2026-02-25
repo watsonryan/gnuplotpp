@@ -2,9 +2,11 @@
 #include "gnuplotpp/logging.hpp"
 #include "gnuplotpp/plot.hpp"
 #include "gnuplotpp/presets.hpp"
+#include "gnuplotpp/statistics.hpp"
 
 #include <cmath>
 #include <filesystem>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -97,10 +99,22 @@ int main(int argc, char** argv) {
 
   std::vector<double> bins(20);
   std::vector<double> counts(20);
+  std::vector<double> samples;
+  samples.reserve(1200);
+  std::mt19937_64 rng(7ULL);
+  std::normal_distribution<double> nrm(0.1, 0.35);
+  for (int i = 0; i < 1200; ++i) {
+    samples.push_back(nrm(rng));
+  }
+  const double bin_w = 0.12;
   for (int i = 0; i < 20; ++i) {
-    bins[i] = -1.0 + 0.1 * static_cast<double>(i);
-    const double d = bins[i] - 0.1;
-    counts[i] = 120.0 * std::exp(-d * d / 0.18);
+    bins[i] = -1.2 + bin_w * static_cast<double>(i);
+  }
+  for (const double s : samples) {
+    const int b = static_cast<int>(std::floor((s + 1.2) / bin_w));
+    if (b >= 0 && b < 20) {
+      counts[static_cast<std::size_t>(b)] += 1.0;
+    }
   }
   SeriesSpec hist;
   hist.label = "PDF proxy";
@@ -109,6 +123,15 @@ int main(int argc, char** argv) {
   hist.has_opacity = true;
   hist.opacity = 0.45;
   fig.axes(1).add_histogram(hist, bins, counts);
+
+  const auto kde = gaussian_kde(samples, bins);
+  std::vector<double> kde_scaled(kde.size(), 0.0);
+  for (std::size_t i = 0; i < kde.size(); ++i) {
+    kde_scaled[i] = kde[i] * static_cast<double>(samples.size()) * bin_w;
+  }
+  fig.axes(1).add_series(SeriesSpec{.label = "KDE", .has_line_width = true, .line_width_pt = 1.8},
+                         bins,
+                         kde_scaled);
 
   AxesSpec ax2;
   ax2.title = "Heatmap Samples";
