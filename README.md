@@ -25,8 +25,12 @@ Pure C++20 plotting API with a gnuplot renderer for figures.
 - Data transforms (`moving_average`, `downsample_uniform`, `autocorrelation`)
 - CSV ingestion and unit-aware labels (`read_csv_numeric`, `label_with_unit`)
 - Faceting helpers (`facet_grid`, `apply_facet_axes`)
+- Composition helpers (`apply_panel_titles`, `apply_shared_legend`, `apply_shared_colorbar_label`)
+- Auto legend placement heuristic (`auto_place_legend`)
 - YAML declarative spec loading (`load_yaml_figure_spec`)
 - Template gallery and quick templates (`apply_plot_template`, `write_template_gallery_yaml`)
+- DataTable column plotting adapters (`add_line`, `add_scatter`)
+- Versioned theme presets (`ThemePreset::*_v1`)
 - Font fallback chain for cross-format typography consistency
 - Reproducibility manifest export (`manifest.json`)
 

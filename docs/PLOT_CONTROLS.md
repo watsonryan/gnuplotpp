@@ -15,6 +15,8 @@ This document is the full control reference for `gnuplotpp` plotting.
 - `gnuplotpp::save_theme_json` / `gnuplotpp::load_theme_json`
 - `gnuplotpp::read_csv_numeric`
 - `gnuplotpp::facet_grid` / `gnuplotpp::apply_facet_axes`
+- `gnuplotpp::apply_panel_titles` / `gnuplotpp::apply_shared_legend` / `gnuplotpp::apply_shared_colorbar_label`
+- `gnuplotpp::auto_legend_position` / `gnuplotpp::auto_place_legend`
 - `gnuplotpp::load_yaml_figure_spec`
 - `gnuplotpp::apply_plot_template`
 
@@ -206,6 +208,9 @@ gnuplotpp::confidence_ellipse(x, y, 2.0, ell_x, ell_y, 200);
 
 ```cpp
 auto tbl = gnuplotpp::read_csv_numeric("signals.csv");
+if (tbl.has_column("time") && tbl.has_column("error")) {
+  tbl.add_line(fig.axes(0), {.label = "error"}, "time", "error");
+}
 auto [rows, cols] = gnuplotpp::facet_grid(6);
 fs.rows = rows;
 fs.cols = cols;
@@ -214,6 +219,14 @@ gnuplotpp::AxesSpec base;
 base.xlabel = gnuplotpp::label_with_unit("time", "s");
 base.ylabel = gnuplotpp::label_with_unit("error", "m");
 gnuplotpp::apply_facet_axes(fig, base, {"A","B","C","D","E","F"});
+
+// Composition helpers
+gnuplotpp::apply_panel_titles(fig, {"(a)", "(b)", "(c)", "(d)", "(e)", "(f)"});
+gnuplotpp::LegendSpec shared_legend;
+shared_legend.enabled = true;
+shared_legend.position = gnuplotpp::LegendPosition::TopLeft;
+gnuplotpp::apply_shared_legend(fig, shared_legend, 0);
+gnuplotpp::apply_shared_colorbar_label(fig, "density", rows * cols - 1);
 ```
 
 ### YAML Figure Spec

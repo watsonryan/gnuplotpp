@@ -25,6 +25,15 @@ gnuplotpp::apply_style_profile(fs, gnuplotpp::StyleProfile::Tufte_Minimal);
 - `DarkPrintSafe`
 - `Tufte_Minimal`
 
+## Versioned Theme Presets
+
+For reproducibility across releases, use versioned theme ids:
+
+```cpp
+gnuplotpp::apply_theme_preset(fs, gnuplotpp::ThemePreset::IEEE_Strict_v1);
+auto id = gnuplotpp::theme_preset_id(gnuplotpp::ThemePreset::IEEE_Strict_v1);
+```
+
 ## Typography Model
 
 Typography is preset/profile-driven by default:
