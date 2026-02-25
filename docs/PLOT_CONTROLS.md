@@ -226,6 +226,39 @@ if (!ys.axes.empty()) {
 }
 ```
 
+Example YAML (including nested style overrides):
+
+```yaml
+figure:
+  title: "YAML quick figure"
+  preset: IEEE_SingleColumn
+  formats: [pdf, svg]
+axes:
+  - title: "Signal"
+    xlabel: "t [s]"
+    ylabel: "x(t)"
+    legend_spec:
+      position: top_left
+      columns: 2
+      boxed: true
+      font_pt: 8.0
+    typography:
+      tick_font_pt: 10.0
+      label_font_pt: 12.0
+      title_font_pt: 14.0
+      title_bold: true
+    frame:
+      border_mask: 3
+      border_line_width_pt: 0.9
+      border_color: "#222222"
+      ticks_out: true
+      ticks_mirror: false
+```
+
+Compatibility note:
+- Legacy flat typography fields on `AxesSpec` are still accepted in C++, but are deprecated.
+- Prefer `ax.typography.*` and `ax.frame.*` for all new code and YAML specs.
+
 ## Data and Rendering
 
 ```cpp

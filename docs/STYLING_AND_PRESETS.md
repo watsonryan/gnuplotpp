@@ -48,6 +48,10 @@ ax.typography.has_title_bold = true;
 ax.typography.title_bold = true;
 ```
 
+Legacy note:
+- Flat `AxesSpec` font fields (`has_tick_font_pt`, `tick_font_pt`, etc.) are compatibility-only and deprecated.
+- Use `ax.typography.*` / `ax.frame.*` so preset/profile styling remains consistent by default.
+
 For frame style consistency:
 
 ```cpp

@@ -208,14 +208,41 @@ struct AxesSpec {
   TypographySpec typography{};
   AxisFrameSpec frame{};
 
-  // Legacy typography overrides (kept for source compatibility).
+  /**
+   * @deprecated Use `typography.has_tick_font_pt` and `typography.tick_font_pt`.
+   * Legacy fields are normalized in `Axes::set()` for compatibility only.
+   */
   bool has_tick_font_pt = false;
+  /**
+   * @deprecated Use `typography.tick_font_pt`.
+   */
   double tick_font_pt = 8.0;
+  /**
+   * @deprecated Use `typography.has_label_font_pt` and `typography.label_font_pt`.
+   * Legacy fields are normalized in `Axes::set()` for compatibility only.
+   */
   bool has_label_font_pt = false;
+  /**
+   * @deprecated Use `typography.label_font_pt`.
+   */
   double label_font_pt = 9.0;
+  /**
+   * @deprecated Use `typography.has_title_font_pt` and `typography.title_font_pt`.
+   * Legacy fields are normalized in `Axes::set()` for compatibility only.
+   */
   bool has_title_font_pt = false;
+  /**
+   * @deprecated Use `typography.title_font_pt`.
+   */
   double title_font_pt = 9.0;
+  /**
+   * @deprecated Use `typography.has_title_bold` and `typography.title_bold`.
+   * Legacy fields are normalized in `Axes::set()` for compatibility only.
+   */
   bool has_title_bold = false;
+  /**
+   * @deprecated Use `typography.title_bold`.
+   */
   bool title_bold = false;
 
   std::vector<LabelAnnotation> labels;
