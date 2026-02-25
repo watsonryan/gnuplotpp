@@ -4,6 +4,7 @@
 #include "gnuplotpp/presets.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <filesystem>
 #include <sstream>
 #include <random>
@@ -70,9 +71,24 @@ int main(int argc, char** argv) {
   for (int i = 0; i < 220; ++i) {
     t.push_back(0.1 * static_cast<double>(i));
   }
+  std::vector<double> sigma_upper;
+  std::vector<double> sigma_lower;
+  sigma_upper.reserve(t.size());
+  sigma_lower.reserve(t.size());
 
   std::mt19937_64 rng(123456ULL);
   std::normal_distribution<double> noise(0.0, 0.12);
+  constexpr double phi = 0.985;
+  constexpr double sigma_w = 0.12;
+  const double phi2 = phi * phi;
+  for (std::size_t i = 0; i < t.size(); ++i) {
+    const double k = static_cast<double>(i + 1);
+    const double var_k = (sigma_w * sigma_w) * (1.0 - std::pow(phi2, k)) / (1.0 - phi2);
+    const double three_sigma = 3.0 * std::sqrt(std::max(0.0, var_k));
+    sigma_upper.push_back(three_sigma);
+    sigma_lower.push_back(-three_sigma);
+  }
+
   for (int k = 0; k < n_paths; ++k) {
     std::vector<double> y;
     y.reserve(t.size());
@@ -94,6 +110,23 @@ int main(int argc, char** argv) {
     s.opacity = alpha;
     fig.axes(0).add_series(s, t, y);
   }
+
+  fig.axes(0).add_series(SeriesSpec{.label = "",
+                                    .has_line_width = true,
+                                    .line_width_pt = 2.0,
+                                    .has_color = true,
+                                    .color = "#6d6d6d"},
+                         t,
+                         sigma_upper);
+  fig.axes(0).add_series(SeriesSpec{.label = "",
+                                    .has_line_width = true,
+                                    .line_width_pt = 2.0,
+                                    .has_color = true,
+                                    .color = "#6d6d6d"},
+                         t,
+                         sigma_lower);
+  ax.gnuplot_commands.push_back("set label 11 '+/-3{/Symbol s}' at graph 0.79,0.90 font 'Helvetica,13' tc rgb '#4a4a4a'");
+  fig.axes(0).set(ax);
 
   fig.set_backend(make_gnuplot_backend());
   const auto result = fig.save(out_dir / "figures");
