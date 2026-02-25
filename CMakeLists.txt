@@ -16,6 +16,7 @@ add_library(gnuplotpp
   src/figure.cpp
   src/gnuplot_backend.cpp
   src/presets.cpp
+  src/svg_backend.cpp
 )
 
 add_library(gnuplotpp::gnuplotpp ALIAS gnuplotpp)
@@ -50,4 +51,8 @@ if(BUILD_TESTING)
   add_executable(gnuplotpp_gnuplot_backend_test tests/gnuplot_backend_test.cpp)
   target_link_libraries(gnuplotpp_gnuplot_backend_test PRIVATE gnuplotpp::gnuplotpp)
   add_test(NAME gnuplotpp_gnuplot_backend_test COMMAND gnuplotpp_gnuplot_backend_test)
+
+  add_executable(gnuplotpp_svg_backend_test tests/svg_backend_test.cpp)
+  target_link_libraries(gnuplotpp_svg_backend_test PRIVATE gnuplotpp::gnuplotpp)
+  add_test(NAME gnuplotpp_svg_backend_test COMMAND gnuplotpp_svg_backend_test)
 endif()

@@ -1,11 +1,21 @@
 #include "gnuplotpp/gnuplot_backend.hpp"
 #include "gnuplotpp/plot.hpp"
 #include "gnuplotpp/presets.hpp"
+#include "gnuplotpp/svg_backend.hpp"
 
+#include <cstdlib>
 #include <filesystem>
 #include <iostream>
 #include <string>
 #include <vector>
+
+namespace {
+
+bool gnuplot_available() {
+  return std::system("command -v gnuplot >/dev/null 2>&1") == 0;
+}
+
+}  // namespace
 
 int main(int argc, char** argv) {
   using namespace gnuplotpp;
@@ -62,7 +72,11 @@ int main(int argc, char** argv) {
   fig.axes(2).add_series(SeriesSpec{.type = SeriesType::Line, .label = "SRIF"}, t, ez);
   fig.axes(3).add_series(SeriesSpec{.type = SeriesType::Line, .label = "SRIF"}, t, ev);
 
-  fig.set_backend(make_gnuplot_backend());
+  if (gnuplot_available()) {
+    fig.set_backend(make_gnuplot_backend());
+  } else {
+    fig.set_backend(make_svg_backend());
+  }
 
   const auto result = fig.save(out_dir / "figures");
   if (!result.ok) {
@@ -71,7 +85,6 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  std::cout << "rendered figure script: " << result.script_path << "\n";
   for (const auto& output : result.outputs) {
     std::cout << "output: " << output << "\n";
   }

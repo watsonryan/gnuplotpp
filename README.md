@@ -1,6 +1,6 @@
 # gnuplotpp
 
-Pure C++20 plotting API with a gnuplot backend for publication-ready IEEE/AIAA figures.
+Pure C++20 plotting API with pluggable backends for publication-ready IEEE/AIAA figures.
 
 ## Build
 
@@ -17,9 +17,11 @@ flowchart LR
   A[FigureSpec/AxesSpec/SeriesSpec] --> B[Figure/Axes Containers]
   B --> C[IPlotBackend]
   C --> D[GnuplotBackend]
-  D --> E[tmp/*.dat]
-  D --> F[tmp/figure.gp]
-  D --> G[figure.pdf|svg|eps|png]
+  C --> E[SvgBackend]
+  D --> F[tmp/*.dat]
+  D --> G[tmp/figure.gp]
+  D --> H[figure.pdf|svg|eps|png]
+  E --> I[figure.svg]
 ```
 
 ## Render Flow
@@ -28,17 +30,13 @@ flowchart LR
 sequenceDiagram
   participant App as Example App (C++)
   participant Fig as gnuplotpp::Figure
-  participant Be as GnuplotBackend
-  participant Gp as gnuplot executable
+  participant Be as Selected Backend
 
   App->>Fig: configure spec/layout + add series
   App->>Fig: save(out_dir)
   Fig->>Be: render(fig, out_dir)
-  Be->>Be: write .dat and .gp files
-  Be->>Gp: run gnuplot figure.gp
-  Gp-->>Be: outputs (pdf/svg/eps/png)
   Be-->>Fig: RenderResult
-  Fig-->>App: RenderResult
+  Fig-->>App: output paths
 ```
 
 ## CMake Presets
@@ -59,12 +57,16 @@ When enabled, CMake downloads `CPM.cmake` and resolves C++ libraries (currently 
 
 ## Gnuplot and CPM
 
-Short answer: not directly in a reliable cross-platform way.
+- CPM is best for CMake/C++ dependencies.
+- `gnuplot` is an external CLI renderer.
+- Recommended: install `gnuplot` with system package managers and keep CPM for C++ libs.
 
-- CPM is best for CMake/C++ package dependencies.
-- `gnuplot` here is an external CLI renderer, not a typical CMake target dependency.
-- Recommended: install `gnuplot` with system package managers (`brew`, `apt`, `dnf`, etc.) and keep CPM for C++ libs.
-- You can still point the backend to a custom executable path with `make_gnuplot_backend("/path/to/gnuplot")`.
+## No Separate Plot Command
+
+You run only the C++ executable.
+
+- If `gnuplot` exists, examples render publication outputs (`pdf/svg/png`) via `GnuplotBackend`.
+- If `gnuplot` is missing, examples automatically fall back to native `SvgBackend` and still generate `figure.svg`.
 
 ## Example Plots
 
@@ -73,14 +75,6 @@ Short answer: not directly in a reliable cross-platform way.
 ./build/dev-debug/layout_2x2_example --out out/layout_2x2
 ```
 
-Outputs are always generated for inspection:
+Generated outputs include at least:
 
-- `out/<name>/figures/tmp/*.dat`
-- `out/<name>/figures/tmp/figure.gp`
-
-Rendered outputs require installed `gnuplot` and can include:
-
-- `out/<name>/figures/figure.pdf`
 - `out/<name>/figures/figure.svg`
-- `out/<name>/figures/figure.eps`
-- `out/<name>/figures/figure.png`
