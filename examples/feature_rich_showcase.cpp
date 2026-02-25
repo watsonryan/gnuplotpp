@@ -18,7 +18,7 @@ gnuplotpp::FigureSpec base_spec(const std::string& title) {
   FigureSpec fs;
   fs.preset = Preset::IEEE_Tran;
   apply_preset_defaults(fs);
-  apply_style_profile(fs, StyleProfile::Science);
+  apply_theme_preset(fs, ThemePreset::Science_v1);
   fs = FigureBuilder(fs)
            .title(title)
            .layout(1, 1)

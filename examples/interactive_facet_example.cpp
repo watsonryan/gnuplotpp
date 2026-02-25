@@ -55,6 +55,7 @@ int main(int argc, char** argv) {
   base.legend_spec.position = LegendPosition::TopLeft;
   base.enable_crosshair = true;
   apply_facet_axes(fig, base, {"Group A", "Group B", "Group C", "Group D"});
+  apply_panel_titles(fig, {"Group A", "Group B", "Group C", "Group D"});
 
   std::mt19937_64 rng(42ULL);
   std::normal_distribution<double> nrm(0.0, 0.08);
@@ -81,8 +82,21 @@ int main(int argc, char** argv) {
       fig.axes(k).add_band(s, t, fan_lo[b], fan_hi[b]);
     }
 
-    fig.axes(k).add_series(SeriesSpec{.label = "mean", .has_line_width = true, .line_width_pt = 1.8}, t, y);
+    auto ax_spec = fig.axes(k).spec();
+    auto_place_legend(ax_spec, t, y);
+    fig.axes(k).set(ax_spec);
+    tbl.add_line(fig.axes(k),
+                 SeriesSpec{.label = "mean", .has_line_width = true, .line_width_pt = 1.8},
+                 "t",
+                 cols_name[static_cast<std::size_t>(k)]);
   }
+
+  LegendSpec shared_legend;
+  shared_legend.enabled = true;
+  shared_legend.position = LegendPosition::TopLeft;
+  shared_legend.columns = 1;
+  shared_legend.boxed = true;
+  apply_shared_legend(fig, shared_legend, 0);
 
   if (example_common::render_figure(fig, out_dir / "figures") != 0) {
     return 1;
