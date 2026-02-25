@@ -5,6 +5,7 @@ This folder contains practical guides for using `gnuplotpp` from first plot to a
 ## Start Here
 
 - [Getting Started](GETTING_STARTED.md)
+- [API Contracts](API_CONTRACTS.md)
 - [Best Practices Quick Reference](BEST_PRACTICES.md)
 - [Styling and Presets](STYLING_AND_PRESETS.md)
 - [Statistical Plot Guide](STATISTICS_GUIDE.md)

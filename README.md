@@ -70,6 +70,7 @@ ctest --preset test-debug
 ## Documentation
 
 - [Documentation Index](docs/README.md)
+- [API Contracts](docs/API_CONTRACTS.md)
 - [Getting Started](docs/GETTING_STARTED.md)
 - [Best Practices Quick Reference](docs/BEST_PRACTICES.md)
 - [Styling and Presets](docs/STYLING_AND_PRESETS.md)

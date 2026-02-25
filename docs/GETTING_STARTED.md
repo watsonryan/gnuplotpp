@@ -44,6 +44,8 @@ Output files appear under:
 ## Minimal C++ Flow
 
 ```cpp
+#include "gnuplotpp/api.hpp"
+
 gnuplotpp::FigureSpec fs;
 fs.preset = gnuplotpp::Preset::IEEE_SingleColumn;
 gnuplotpp::apply_preset_defaults(fs);
