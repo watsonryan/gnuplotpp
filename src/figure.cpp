@@ -81,6 +81,28 @@ void Axes::add_heatmap(const SeriesSpec& spec,
   series_.push_back(std::move(data));
 }
 
+void Axes::add_errorbars_asymmetric(const SeriesSpec& spec,
+                                    std::span<const double> x,
+                                    std::span<const double> y,
+                                    std::span<const double> y_low,
+                                    std::span<const double> y_high) {
+  if (x.size() != y.size() || x.size() != y_low.size() || x.size() != y_high.size()) {
+    throw std::invalid_argument("x, y, y_low, and y_high must have the same length");
+  }
+  SeriesSpec e_spec = spec;
+  e_spec.type = SeriesType::ErrorBars;
+  if (e_spec.has_opacity && (e_spec.opacity < 0.0 || e_spec.opacity > 1.0)) {
+    throw std::invalid_argument("series opacity must be in [0, 1]");
+  }
+  SeriesData data;
+  data.spec = e_spec;
+  data.x.assign(x.begin(), x.end());
+  data.y.assign(y.begin(), y.end());
+  data.yerr_low.assign(y_low.begin(), y_low.end());
+  data.yerr_high.assign(y_high.begin(), y_high.end());
+  series_.push_back(std::move(data));
+}
+
 Figure::Figure(FigureSpec spec) : spec_(std::move(spec)) {
   if (spec_.rows <= 0 || spec_.cols <= 0) {
     throw std::invalid_argument("rows and cols must be positive");

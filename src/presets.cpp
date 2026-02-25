@@ -38,6 +38,30 @@ PresetDefaults preset_defaults(Preset preset) {
       defaults.style.point_size = 0.6;
       defaults.style.grid = false;
       break;
+    case Preset::IEEE_Tran:
+      defaults.size = FigureSizeInches{.w = 3.5, .h = 2.4};
+      defaults.style.font = "Times";
+      defaults.style.font_pt = 8.0;
+      defaults.style.line_width_pt = 1.0;
+      defaults.style.point_size = 0.6;
+      defaults.style.grid = false;
+      break;
+    case Preset::Nature_1Col:
+      defaults.size = FigureSizeInches{.w = 3.54, .h = 2.5};
+      defaults.style.font = "Arial";
+      defaults.style.font_pt = 8.0;
+      defaults.style.line_width_pt = 1.0;
+      defaults.style.point_size = 0.7;
+      defaults.style.grid = false;
+      break;
+    case Preset::Elsevier_1Col:
+      defaults.size = FigureSizeInches{.w = 3.35, .h = 2.4};
+      defaults.style.font = "Times";
+      defaults.style.font_pt = 8.0;
+      defaults.style.line_width_pt = 1.0;
+      defaults.style.point_size = 0.6;
+      defaults.style.grid = false;
+      break;
     case Preset::Custom:
       defaults.size = FigureSizeInches{.w = 3.5, .h = 2.5};
       defaults.style = Style{};

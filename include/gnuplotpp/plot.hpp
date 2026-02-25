@@ -29,6 +29,9 @@ enum class Preset {
   IEEE_DoubleColumn,
   AIAA_Column,
   AIAA_Page,
+  IEEE_Tran,
+  Nature_1Col,
+  Elsevier_1Col,
   Custom
 };
 
@@ -59,6 +62,9 @@ struct FigureSpec {
   std::vector<OutputFormat> formats{OutputFormat::Pdf};
   std::string title;
   bool write_manifest = false;
+  bool share_x = false;
+  bool share_y = false;
+  bool hide_inner_tick_labels = false;
 };
 
 /** @brief Legend placement presets. */
@@ -117,6 +123,7 @@ struct AxesSpec {
   std::string title;
   std::string xlabel;
   std::string ylabel;
+  std::string y2label;
   bool grid = false;
   bool legend = true;
   LegendSpec legend_spec{};
@@ -131,6 +138,11 @@ struct AxesSpec {
 
   bool xlog = false;
   bool ylog = false;
+  bool y2log = false;
+
+  bool has_y2lim = false;
+  double y2min = 0.0;
+  double y2max = 0.0;
 
   bool has_xtick_step = false;
   double xtick_step = 1.0;
@@ -169,6 +181,7 @@ struct SeriesSpec {
    */
   bool has_opacity = false;
   double opacity = 1.0;
+  bool use_y2 = false;
 };
 
 /** @brief In-memory series samples used by backends for emission/rendering. */
@@ -177,6 +190,8 @@ struct SeriesData {
   std::vector<double> x;
   std::vector<double> y;
   std::vector<double> y2;
+  std::vector<double> yerr_low;
+  std::vector<double> yerr_high;
   std::vector<double> z;
 };
 
@@ -238,6 +253,20 @@ public:
                    std::span<const double> x,
                    std::span<const double> y,
                    std::span<const double> z);
+
+  /**
+   * @brief Add asymmetric y-errorbar series.
+   * @param spec Series metadata.
+   * @param x X samples.
+   * @param y Central values.
+   * @param y_low Absolute lower errors.
+   * @param y_high Absolute upper errors.
+   */
+  void add_errorbars_asymmetric(const SeriesSpec& spec,
+                                std::span<const double> x,
+                                std::span<const double> y,
+                                std::span<const double> y_low,
+                                std::span<const double> y_high);
 
   /** @return Current axes configuration. */
   const AxesSpec& spec() const { return spec_; }

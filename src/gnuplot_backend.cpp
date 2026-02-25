@@ -210,13 +210,24 @@ std::string using_clause(const SeriesData& series) {
     case SeriesType::Band:
     case SeriesType::Heatmap:
       return "using 1:2:3";
+    case SeriesType::ErrorBars:
+      if (!series.yerr_low.empty() && !series.yerr_high.empty()) {
+        return "using 1:2:3:4";
+      }
+      return "using 1:2";
     case SeriesType::Line:
     case SeriesType::Scatter:
-    case SeriesType::ErrorBars:
     case SeriesType::Histogram:
       return "using 1:2";
   }
   return "using 1:2";
+}
+
+std::string axes_clause(const SeriesData& series) {
+  if (series.spec.use_y2) {
+    return "axes x1y2";
+  }
+  return {};
 }
 
 std::string with_clause(const SeriesData& series,
@@ -261,7 +272,11 @@ std::string with_clause(const SeriesData& series,
       }
       break;
     case SeriesType::ErrorBars:
-      os << "with yerrorbars lw " << std::max(0.5, line_width);
+      if (!series.yerr_low.empty() && !series.yerr_high.empty()) {
+        os << "with yerrorbars lw " << std::max(0.5, line_width);
+      } else {
+        os << "with yerrorbars lw " << std::max(0.5, line_width);
+      }
       if (!color.empty()) {
         os << " lc rgb '" << color << "'";
       }
@@ -411,11 +426,17 @@ void emit_plot_body(std::ostream& os,
     os << "unset title\n";
     os << "unset xlabel\n";
     os << "unset ylabel\n";
+    os << "unset y2label\n";
     os << "unset grid\n";
     os << "unset logscale x\n";
     os << "unset logscale y\n";
+    os << "unset logscale y2\n";
     os << "set autoscale x\n";
     os << "set autoscale y\n";
+    os << "set autoscale y2\n";
+    os << "unset y2tics\n";
+    os << "set format x '%.2g'\n";
+    os << "set format y '%.2g'\n";
 
     const bool legend_enabled = axis_spec.legend && axis_spec.legend_spec.enabled;
     if (legend_enabled) {
@@ -445,6 +466,10 @@ void emit_plot_body(std::ostream& os,
       os << "set ylabel '" << esc(axis_spec.ylabel) << "' font '" << esc(spec.style.font) << ","
          << label_font_pt << "'\n";
     }
+    if (!axis_spec.y2label.empty()) {
+      os << "set y2label '" << esc(axis_spec.y2label) << "' font '" << esc(spec.style.font) << ","
+         << label_font_pt << "'\n";
+    }
 
     if (axis_spec.grid || spec.style.grid) {
       os << "set grid xtics ytics linewidth 0.5 linecolor rgb '#d0d0d0'\n";
@@ -454,6 +479,9 @@ void emit_plot_body(std::ostream& os,
     }
     if (axis_spec.ylog) {
       os << "set logscale y\n";
+    }
+    if (axis_spec.y2log) {
+      os << "set logscale y2\n";
     }
     if (axis_spec.has_xtick_step) {
       os << "set xtics " << axis_spec.xtick_step << "\n";
@@ -480,6 +508,33 @@ void emit_plot_body(std::ostream& os,
     if (axis_spec.has_ylim) {
       os << "set yrange [" << axis_spec.ymin << ":" << axis_spec.ymax << "]\n";
     }
+    if (axis_spec.has_y2lim) {
+      os << "set y2range [" << axis_spec.y2min << ":" << axis_spec.y2max << "]\n";
+    }
+
+    bool has_y2_series = false;
+    for (const auto& s : axis.series()) {
+      if (s.spec.use_y2) {
+        has_y2_series = true;
+        break;
+      }
+    }
+    if (has_y2_series) {
+      os << "set y2tics\n";
+    }
+
+    const std::size_t row = axis_idx / static_cast<std::size_t>(spec.cols);
+    const std::size_t col = axis_idx % static_cast<std::size_t>(spec.cols);
+    if (spec.hide_inner_tick_labels) {
+      if (spec.share_x && row + 1 < static_cast<std::size_t>(spec.rows)) {
+        os << "set format x ''\n";
+        os << "unset xlabel\n";
+      }
+      if (spec.share_y && col > 0) {
+        os << "set format y ''\n";
+        os << "unset ylabel\n";
+      }
+    }
 
     emit_typed_objects(os, axis_spec);
     for (const auto& cmd : axis_spec.gnuplot_commands) {
@@ -495,6 +550,7 @@ void emit_plot_body(std::ostream& os,
     for (std::size_t s = 0; s < axis.series().size(); ++s) {
       const auto& series = axis.series()[s];
       os << quote(data_files[axis_idx][s]) << " " << using_clause(series) << " "
+         << axes_clause(series) << " "
          << with_clause(series, spec.style, spec.preset, spec.palette, s) << " title '"
          << esc(series.spec.label) << "'";
       if (s + 1 < axis.series().size()) {
@@ -582,6 +638,10 @@ RenderResult GnuplotBackend::render(const Figure& fig, const std::filesystem::pa
         data_os << series.x[i] << " " << series.y[i];
         if (series.spec.type == SeriesType::Band && i < series.y2.size()) {
           data_os << " " << series.y2[i];
+        }
+        if (series.spec.type == SeriesType::ErrorBars && i < series.yerr_low.size() &&
+            i < series.yerr_high.size()) {
+          data_os << " " << series.yerr_low[i] << " " << series.yerr_high[i];
         }
         if (series.spec.type == SeriesType::Heatmap && i < series.z.size()) {
           data_os << " " << series.z[i];
