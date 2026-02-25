@@ -1,21 +1,17 @@
 #include "gnuplotpp/gnuplot_backend.hpp"
+#include "gnuplotpp/logging.hpp"
 
 #include <algorithm>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
-#include <iostream>
 #include <sstream>
 #include <string>
 #include <utility>
 
 #ifdef GNUPLOTPP_HAS_FMT
 #include <fmt/format.h>
-#endif
-
-#ifdef GNUPLOTPP_HAS_SPDLOG
-#include <spdlog/spdlog.h>
 #endif
 
 namespace gnuplotpp {
@@ -55,22 +51,6 @@ std::string msg_text(const std::string& prefix, const std::string& detail) {
   return fmt::format("{}: {}", prefix, detail);
 #else
   return prefix + ": " + detail;
-#endif
-}
-
-void log_info(const std::string& msg) {
-#ifdef GNUPLOTPP_HAS_SPDLOG
-  spdlog::info("{}", msg);
-#else
-  std::clog << "[gnuplotpp] info: " << msg << "\n";
-#endif
-}
-
-void log_error(const std::string& msg) {
-#ifdef GNUPLOTPP_HAS_SPDLOG
-  spdlog::error("{}", msg);
-#else
-  std::cerr << "[gnuplotpp] error: " << msg << "\n";
 #endif
 }
 
@@ -287,7 +267,7 @@ RenderResult GnuplotBackend::render(const Figure& fig,
     result.ok = false;
     result.status = RenderStatus::IoError;
     result.message = msg_io("failed to create output directories", out_dir / "tmp", ec);
-    log_error(result.message);
+    gnuplotpp::log::Error(result.message);
     return result;
   }
 
@@ -310,7 +290,7 @@ RenderResult GnuplotBackend::render(const Figure& fig,
         result.ok = false;
         result.status = RenderStatus::IoError;
         result.message = msg_text("failed to open data file for writing", data_path.string());
-        log_error(result.message);
+        gnuplotpp::log::Error(result.message);
         return result;
       }
       data_os << std::scientific << std::setprecision(16);
@@ -321,7 +301,7 @@ RenderResult GnuplotBackend::render(const Figure& fig,
         result.ok = false;
         result.status = RenderStatus::IoError;
         result.message = msg_text("failed while writing data file", data_path.string());
-        log_error(result.message);
+        gnuplotpp::log::Error(result.message);
         return result;
       }
     }
@@ -335,7 +315,7 @@ RenderResult GnuplotBackend::render(const Figure& fig,
     result.ok = false;
     result.status = RenderStatus::IoError;
     result.message = msg_text("failed to open gnuplot script for writing", script_path.string());
-    log_error(result.message);
+    gnuplotpp::log::Error(result.message);
     return result;
   }
   script_os << "set encoding utf8\n";
@@ -353,7 +333,7 @@ RenderResult GnuplotBackend::render(const Figure& fig,
     result.ok = false;
     result.status = RenderStatus::IoError;
     result.message = msg_text("failed while writing gnuplot script", script_path.string());
-    log_error(result.message);
+    gnuplotpp::log::Error(result.message);
     return result;
   }
   script_os.close();
@@ -361,7 +341,7 @@ RenderResult GnuplotBackend::render(const Figure& fig,
     result.ok = false;
     result.status = RenderStatus::IoError;
     result.message = msg_text("failed to finalize gnuplot script", script_path.string());
-    log_error(result.message);
+    gnuplotpp::log::Error(result.message);
     return result;
   }
 
@@ -371,7 +351,7 @@ RenderResult GnuplotBackend::render(const Figure& fig,
     result.status = RenderStatus::ExternalToolMissing;
     result.message = msg_text("gnuplot executable not found; generated script/data only",
                               executable_);
-    log_error(result.message);
+    gnuplotpp::log::Error(result.message);
     return result;
   }
 
@@ -387,7 +367,7 @@ RenderResult GnuplotBackend::render(const Figure& fig,
 #else
     result.message = "gnuplot failed; inspect gnuplot.log in output tmp directory";
 #endif
-    log_error(result.message);
+    gnuplotpp::log::Error(result.message);
     return result;
   }
 
@@ -398,7 +378,7 @@ RenderResult GnuplotBackend::render(const Figure& fig,
       result.ok = false;
       result.status = RenderStatus::ExternalToolFailure;
       result.message = msg_text("gnuplot completed but output is missing/empty", out.string());
-      log_error(result.message);
+      gnuplotpp::log::Error(result.message);
       return result;
     }
   }
@@ -406,7 +386,7 @@ RenderResult GnuplotBackend::render(const Figure& fig,
   result.ok = true;
   result.status = RenderStatus::Success;
   result.message = "render completed";
-  log_info(result.message);
+  gnuplotpp::log::Info(result.message);
   return result;
 }
 

@@ -1,9 +1,9 @@
 #include "gnuplotpp/gnuplot_backend.hpp"
+#include "gnuplotpp/logging.hpp"
 #include "gnuplotpp/plot.hpp"
 #include "gnuplotpp/presets.hpp"
 
 #include <filesystem>
-#include <iostream>
 #include <string>
 #include <vector>
 
@@ -57,13 +57,13 @@ int main(int argc, char** argv) {
   fig.set_backend(make_gnuplot_backend());
   const auto result = fig.save(out_dir / "figures");
   if (!result.ok) {
-    std::cerr << "plot render incomplete: " << result.message << "\n";
-    std::cerr << "script: " << result.script_path << "\n";
+    gnuplotpp::log::Error("plot render incomplete: ", result.message);
+    gnuplotpp::log::Error("script: ", result.script_path.string());
     return 1;
   }
 
   for (const auto& output : result.outputs) {
-    std::cout << "output: " << output << "\n";
+    gnuplotpp::log::Info("output: ", output.string());
   }
 
   return 0;

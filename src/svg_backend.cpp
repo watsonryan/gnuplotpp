@@ -1,4 +1,5 @@
 #include "gnuplotpp/svg_backend.hpp"
+#include "gnuplotpp/logging.hpp"
 
 #include <algorithm>
 #include <array>
@@ -6,7 +7,6 @@
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
-#include <iostream>
 #include <limits>
 #include <sstream>
 #include <string>
@@ -14,10 +14,6 @@
 
 #ifdef GNUPLOTPP_HAS_FMT
 #include <fmt/format.h>
-#endif
-
-#ifdef GNUPLOTPP_HAS_SPDLOG
-#include <spdlog/spdlog.h>
 #endif
 
 namespace gnuplotpp {
@@ -128,22 +124,6 @@ std::string msg_text(const std::string& prefix, const std::string& detail) {
 #endif
 }
 
-void log_info(const std::string& msg) {
-#ifdef GNUPLOTPP_HAS_SPDLOG
-  spdlog::info("{}", msg);
-#else
-  std::clog << "[gnuplotpp] info: " << msg << "\n";
-#endif
-}
-
-void log_error(const std::string& msg) {
-#ifdef GNUPLOTPP_HAS_SPDLOG
-  spdlog::error("{}", msg);
-#else
-  std::cerr << "[gnuplotpp] error: " << msg << "\n";
-#endif
-}
-
 }  // namespace
 
 RenderResult SvgBackend::render(const Figure& fig,
@@ -156,7 +136,7 @@ RenderResult SvgBackend::render(const Figure& fig,
     result.ok = false;
     result.status = RenderStatus::IoError;
     result.message = msg_text("failed to create output directory", ec.message());
-    log_error(result.message);
+    gnuplotpp::log::Error(result.message);
     return result;
   }
 
@@ -172,7 +152,7 @@ RenderResult SvgBackend::render(const Figure& fig,
     result.ok = false;
     result.status = RenderStatus::UnsupportedFormat;
     result.message = "SvgBackend only supports OutputFormat::Svg";
-    log_error(result.message);
+    gnuplotpp::log::Error(result.message);
     return result;
   }
 
@@ -279,7 +259,7 @@ RenderResult SvgBackend::render(const Figure& fig,
     result.ok = false;
     result.status = RenderStatus::IoError;
     result.message = msg_text("failed to open svg output for writing", out_path.string());
-    log_error(result.message);
+    gnuplotpp::log::Error(result.message);
     return result;
   }
   out << svg.str();
@@ -287,7 +267,7 @@ RenderResult SvgBackend::render(const Figure& fig,
     result.ok = false;
     result.status = RenderStatus::IoError;
     result.message = msg_text("failed while writing svg output", out_path.string());
-    log_error(result.message);
+    gnuplotpp::log::Error(result.message);
     return result;
   }
 
@@ -295,7 +275,7 @@ RenderResult SvgBackend::render(const Figure& fig,
   result.status = RenderStatus::Success;
   result.message = "native svg render completed";
   result.outputs.push_back(out_path);
-  log_info(result.message);
+    gnuplotpp::log::Info(result.message);
   return result;
 }
 
