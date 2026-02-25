@@ -3,6 +3,7 @@ project(gnuplotpp VERSION 0.1.0 LANGUAGES CXX)
 
 option(ENABLE_PLOTTING "Enable gnuplot rendering support" ON)
 option(BUILD_TESTING "Build tests" ON)
+option(BUILD_EXAMPLES "Build examples" ON)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -23,6 +24,11 @@ target_include_directories(gnuplotpp
 )
 
 target_compile_features(gnuplotpp PUBLIC cxx_std_20)
+
+if(BUILD_EXAMPLES)
+  add_executable(two_window_example examples/two_window_example.cpp)
+  target_link_libraries(two_window_example PRIVATE gnuplotpp::gnuplotpp)
+endif()
 
 if(BUILD_TESTING)
   enable_testing()
