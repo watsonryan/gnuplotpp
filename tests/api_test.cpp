@@ -1,4 +1,5 @@
 #include "gnuplotpp/plot.hpp"
+#include "gnuplotpp/presets.hpp"
 
 #include <cassert>
 #include <memory>
@@ -19,8 +20,13 @@ int main() {
   using namespace gnuplotpp;
 
   FigureSpec spec;
+  spec.preset = Preset::IEEE_DoubleColumn;
+  apply_preset_defaults(spec);
   spec.rows = 1;
   spec.cols = 2;
+
+  assert(spec.size.w == 7.16);
+  assert(spec.style.font_pt == 9.0);
 
   Figure fig(spec);
   AxesSpec ax;

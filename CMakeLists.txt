@@ -11,6 +11,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_library(gnuplotpp
   src/figure.cpp
   src/gnuplot_backend.cpp
+  src/presets.cpp
 )
 
 add_library(gnuplotpp::gnuplotpp ALIAS gnuplotpp)
