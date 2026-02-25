@@ -2,10 +2,13 @@
 
 #include <algorithm>
 #include <array>
+#include <cctype>
 #include <cmath>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <iomanip>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -39,7 +42,6 @@ public:
 
   int width() const { return w_; }
   int height() const { return h_; }
-
   const std::vector<std::uint8_t>& data() const { return pix_; }
 
   void set(int x, int y, Color c) {
@@ -53,15 +55,30 @@ public:
     pix_[idx + 3] = c.a;
   }
 
-  void line(int x0, int y0, int x1, int y1, Color c) {
+  void dot(int x, int y, int radius, Color c) {
+    const int r2 = radius * radius;
+    for (int yy = y - radius; yy <= y + radius; ++yy) {
+      for (int xx = x - radius; xx <= x + radius; ++xx) {
+        const int dx = xx - x;
+        const int dy = yy - y;
+        if (dx * dx + dy * dy <= r2) {
+          set(xx, yy, c);
+        }
+      }
+    }
+  }
+
+  void line(int x0, int y0, int x1, int y1, Color c, int thickness = 1) {
     const int dx = std::abs(x1 - x0);
     const int sx = x0 < x1 ? 1 : -1;
     const int dy = -std::abs(y1 - y0);
     const int sy = y0 < y1 ? 1 : -1;
     int err = dx + dy;
 
+    const int radius = std::max(1, thickness) / 2;
+
     while (true) {
-      set(x0, y0, c);
+      dot(x0, y0, radius, c);
       if (x0 == x1 && y0 == y1) {
         break;
       }
@@ -77,19 +94,11 @@ public:
     }
   }
 
-  void rect(int x, int y, int w, int h, Color c) {
-    line(x, y, x + w, y, c);
-    line(x + w, y, x + w, y + h, c);
-    line(x + w, y + h, x, y + h, c);
-    line(x, y + h, x, y, c);
-  }
-
-  void filled_rect(int x, int y, int w, int h, Color c) {
-    for (int yy = y; yy < y + h; ++yy) {
-      for (int xx = x; xx < x + w; ++xx) {
-        set(xx, yy, c);
-      }
-    }
+  void rect(int x, int y, int w, int h, Color c, int thickness = 1) {
+    line(x, y, x + w, y, c, thickness);
+    line(x + w, y, x + w, y + h, c, thickness);
+    line(x + w, y + h, x, y + h, c, thickness);
+    line(x, y + h, x, y, c, thickness);
   }
 
 private:
@@ -156,6 +165,102 @@ Color palette(std::size_t i) {
   return k[i % k.size()];
 }
 
+std::array<std::uint8_t, 7> glyph(char ch) {
+  switch (static_cast<char>(std::toupper(static_cast<unsigned char>(ch)))) {
+    case '0': return {0x0E, 0x11, 0x13, 0x15, 0x19, 0x11, 0x0E};
+    case '1': return {0x04, 0x0C, 0x04, 0x04, 0x04, 0x04, 0x0E};
+    case '2': return {0x0E, 0x11, 0x01, 0x02, 0x04, 0x08, 0x1F};
+    case '3': return {0x1F, 0x02, 0x04, 0x02, 0x01, 0x11, 0x0E};
+    case '4': return {0x02, 0x06, 0x0A, 0x12, 0x1F, 0x02, 0x02};
+    case '5': return {0x1F, 0x10, 0x1E, 0x01, 0x01, 0x11, 0x0E};
+    case '6': return {0x06, 0x08, 0x10, 0x1E, 0x11, 0x11, 0x0E};
+    case '7': return {0x1F, 0x01, 0x02, 0x04, 0x08, 0x08, 0x08};
+    case '8': return {0x0E, 0x11, 0x11, 0x0E, 0x11, 0x11, 0x0E};
+    case '9': return {0x0E, 0x11, 0x11, 0x0F, 0x01, 0x02, 0x0C};
+    case 'A': return {0x04, 0x0A, 0x11, 0x11, 0x1F, 0x11, 0x11};
+    case 'B': return {0x1E, 0x11, 0x11, 0x1E, 0x11, 0x11, 0x1E};
+    case 'C': return {0x0E, 0x11, 0x10, 0x10, 0x10, 0x11, 0x0E};
+    case 'D': return {0x1C, 0x12, 0x11, 0x11, 0x11, 0x12, 0x1C};
+    case 'E': return {0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x1F};
+    case 'F': return {0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x10};
+    case 'G': return {0x0E, 0x11, 0x10, 0x17, 0x11, 0x11, 0x0E};
+    case 'H': return {0x11, 0x11, 0x11, 0x1F, 0x11, 0x11, 0x11};
+    case 'I': return {0x0E, 0x04, 0x04, 0x04, 0x04, 0x04, 0x0E};
+    case 'L': return {0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x1F};
+    case 'M': return {0x11, 0x1B, 0x15, 0x15, 0x11, 0x11, 0x11};
+    case 'N': return {0x11, 0x11, 0x19, 0x15, 0x13, 0x11, 0x11};
+    case 'O': return {0x0E, 0x11, 0x11, 0x11, 0x11, 0x11, 0x0E};
+    case 'P': return {0x1E, 0x11, 0x11, 0x1E, 0x10, 0x10, 0x10};
+    case 'R': return {0x1E, 0x11, 0x11, 0x1E, 0x14, 0x12, 0x11};
+    case 'S': return {0x0F, 0x10, 0x10, 0x0E, 0x01, 0x01, 0x1E};
+    case 'T': return {0x1F, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04};
+    case 'U': return {0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x0E};
+    case 'V': return {0x11, 0x11, 0x11, 0x11, 0x0A, 0x0A, 0x04};
+    case 'X': return {0x11, 0x11, 0x0A, 0x04, 0x0A, 0x11, 0x11};
+    case 'Y': return {0x11, 0x11, 0x0A, 0x04, 0x04, 0x04, 0x04};
+    case '[': return {0x0E, 0x08, 0x08, 0x08, 0x08, 0x08, 0x0E};
+    case ']': return {0x0E, 0x02, 0x02, 0x02, 0x02, 0x02, 0x0E};
+    case '_': return {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1F};
+    case '/': return {0x01, 0x01, 0x02, 0x04, 0x08, 0x10, 0x10};
+    case '-': return {0x00, 0x00, 0x00, 0x1F, 0x00, 0x00, 0x00};
+    case '.': return {0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x06};
+    case ':': return {0x00, 0x06, 0x06, 0x00, 0x06, 0x06, 0x00};
+    case '|': return {0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04};
+    case ' ': return {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    default: return {0x1F, 0x11, 0x01, 0x02, 0x04, 0x00, 0x04};
+  }
+}
+
+int text_width_px(const std::string& s, int scale) {
+  return static_cast<int>(s.size()) * (6 * scale);
+}
+
+void draw_char(Canvas& cv, int x, int y, char ch, int scale, Color c) {
+  const auto g = glyph(ch);
+  for (int row = 0; row < 7; ++row) {
+    for (int col = 0; col < 5; ++col) {
+      if ((g[static_cast<std::size_t>(row)] >> (4 - col)) & 0x1) {
+        for (int yy = 0; yy < scale; ++yy) {
+          for (int xx = 0; xx < scale; ++xx) {
+            cv.set(x + col * scale + xx, y + row * scale + yy, c);
+          }
+        }
+      }
+    }
+  }
+}
+
+void draw_text(Canvas& cv, int x, int y, const std::string& s, int scale, Color c) {
+  int cursor = x;
+  for (char ch : s) {
+    draw_char(cv, cursor, y, ch, scale, c);
+    cursor += 6 * scale;
+  }
+}
+
+void draw_text_vertical(Canvas& cv, int x, int y, const std::string& s, int scale, Color c) {
+  int cursor = y;
+  for (char ch : s) {
+    draw_char(cv, x, cursor, ch, scale, c);
+    cursor += 8 * scale;
+  }
+}
+
+std::string fmt_tick(double v, double span) {
+  std::ostringstream os;
+  const double av = std::abs(v);
+  if ((av > 0.0 && av < 1e-2) || av >= 1e4 || span < 1e-2) {
+    os << std::scientific << std::setprecision(1) << v;
+  } else if (span < 1.0) {
+    os << std::fixed << std::setprecision(2) << v;
+  } else if (span < 10.0) {
+    os << std::fixed << std::setprecision(1) << v;
+  } else {
+    os << std::fixed << std::setprecision(0) << v;
+  }
+  return os.str();
+}
+
 std::uint32_t crc32(const std::uint8_t* data, std::size_t len) {
   std::uint32_t crc = 0xFFFFFFFFu;
   for (std::size_t i = 0; i < len; ++i) {
@@ -211,7 +316,7 @@ bool write_png_rgba(const std::filesystem::path& path,
   std::vector<std::uint8_t> raw;
   raw.reserve(static_cast<std::size_t>(height) * static_cast<std::size_t>(1 + width * 4));
   for (int y = 0; y < height; ++y) {
-    raw.push_back(0);  // filter type 0
+    raw.push_back(0);
     const std::size_t row = static_cast<std::size_t>(y * width * 4);
     raw.insert(raw.end(), rgba.begin() + static_cast<std::ptrdiff_t>(row),
                rgba.begin() + static_cast<std::ptrdiff_t>(row + width * 4));
@@ -245,8 +350,8 @@ bool write_png_rgba(const std::filesystem::path& path,
   std::vector<std::uint8_t> ihdr;
   append_u32_be(ihdr, static_cast<std::uint32_t>(width));
   append_u32_be(ihdr, static_cast<std::uint32_t>(height));
-  ihdr.push_back(8);  // bit depth
-  ihdr.push_back(6);  // RGBA
+  ihdr.push_back(8);
+  ihdr.push_back(6);
   ihdr.push_back(0);
   ihdr.push_back(0);
   ihdr.push_back(0);
@@ -294,16 +399,27 @@ RenderResult PngBackend::render(const Figure& fig,
   }
 
   const auto& spec = fig.spec();
-  const int w = std::max(1, static_cast<int>(std::round(spec.size.w * 220.0)));
-  const int h = std::max(1, static_cast<int>(std::round(spec.size.h * 220.0)));
+  const int dpi = 300;
+  const int w = std::max(1, static_cast<int>(std::round(spec.size.w * static_cast<double>(dpi))));
+  const int h = std::max(1, static_cast<int>(std::round(spec.size.h * static_cast<double>(dpi))));
   Canvas cv(w, h, Color{255, 255, 255, 255});
 
-  const int left = 18;
-  const int top = 16;
-  const int right = 10;
-  const int bottom = 12;
+  const int font_scale = std::max(1, static_cast<int>(std::round(spec.style.font_pt / 4.0)));
+  const int axis_thickness = std::max(1, static_cast<int>(std::round(0.8 * dpi / 72.0)));
+  const int line_thickness =
+      std::max(1, static_cast<int>(std::round(spec.style.line_width_pt * dpi / 72.0)));
+
+  const int left = 90;
+  const int top = 50;
+  const int right = 30;
+  const int bottom = 70;
   const int cell_w = std::max(1, (w - left - right) / spec.cols);
   const int cell_h = std::max(1, (h - top - bottom) / spec.rows);
+
+  if (!spec.title.empty()) {
+    const int tw = text_width_px(spec.title, font_scale);
+    draw_text(cv, (w - tw) / 2, 10, spec.title, font_scale, Color{0, 0, 0, 255});
+  }
 
   const auto& axes = fig.all_axes();
   for (std::size_t idx = 0; idx < axes.size(); ++idx) {
@@ -312,10 +428,10 @@ RenderResult PngBackend::render(const Figure& fig,
     const int x0 = left + col * cell_w;
     const int y0 = top + row * cell_h;
 
-    const int plot_l = x0 + 12;
-    const int plot_t = y0 + 10;
-    const int plot_r = x0 + cell_w - 6;
-    const int plot_b = y0 + cell_h - 12;
+    const int plot_l = x0 + 18;
+    const int plot_t = y0 + 24;
+    const int plot_r = x0 + cell_w - 24;
+    const int plot_b = y0 + cell_h - 30;
     const int plot_w = std::max(1, plot_r - plot_l);
     const int plot_h = std::max(1, plot_b - plot_t);
 
@@ -323,15 +439,22 @@ RenderResult PngBackend::render(const Figure& fig,
     const auto& axis_spec = axis.spec();
     const auto b = compute_bounds(axis);
 
+    if (!axis_spec.title.empty()) {
+      const int tw = text_width_px(axis_spec.title, font_scale);
+      draw_text(cv, plot_l + (plot_w - tw) / 2, y0 + 4, axis_spec.title, font_scale,
+                Color{0, 0, 0, 255});
+    }
+
     if (axis_spec.grid || spec.style.grid) {
       for (int g = 1; g < 5; ++g) {
         const int gx = plot_l + (plot_w * g) / 5;
         const int gy = plot_t + (plot_h * g) / 5;
-        cv.line(gx, plot_t, gx, plot_b, Color{230, 230, 230, 255});
-        cv.line(plot_l, gy, plot_r, gy, Color{230, 230, 230, 255});
+        cv.line(gx, plot_t, gx, plot_b, Color{228, 228, 228, 255}, 1);
+        cv.line(plot_l, gy, plot_r, gy, Color{228, 228, 228, 255}, 1);
       }
     }
-    cv.rect(plot_l, plot_t, plot_w, plot_h, Color{40, 40, 40, 255});
+
+    cv.rect(plot_l, plot_t, plot_w, plot_h, Color{20, 20, 20, 255}, axis_thickness);
 
     const auto map_x = [&](double x) {
       return plot_l + static_cast<int>((x - b.xmin) * static_cast<double>(plot_w) / (b.xmax - b.xmin));
@@ -340,19 +463,51 @@ RenderResult PngBackend::render(const Figure& fig,
       return plot_b - static_cast<int>((y - b.ymin) * static_cast<double>(plot_h) / (b.ymax - b.ymin));
     };
 
+    const int ticks = 5;
+    for (int t = 0; t <= ticks; ++t) {
+      const double fx = static_cast<double>(t) / ticks;
+      const int tx = plot_l + static_cast<int>(fx * plot_w);
+      cv.line(tx, plot_b, tx, plot_b + 8, Color{20, 20, 20, 255}, axis_thickness);
+      const double xv = b.xmin + fx * (b.xmax - b.xmin);
+      const auto label = fmt_tick(xv, b.xmax - b.xmin);
+      const int tw = text_width_px(label, font_scale);
+      draw_text(cv, tx - tw / 2, plot_b + 12, label, font_scale, Color{0, 0, 0, 255});
+
+      const double fy = static_cast<double>(t) / ticks;
+      const int ty = plot_b - static_cast<int>(fy * plot_h);
+      cv.line(plot_l - 8, ty, plot_l, ty, Color{20, 20, 20, 255}, axis_thickness);
+      const double yv = b.ymin + fy * (b.ymax - b.ymin);
+      const auto ylabel = fmt_tick(yv, b.ymax - b.ymin);
+      const int yw = text_width_px(ylabel, font_scale);
+      draw_text(cv, plot_l - 12 - yw, ty - 3 * font_scale, ylabel, font_scale,
+                Color{0, 0, 0, 255});
+    }
+
+    if (!axis_spec.xlabel.empty()) {
+      const int tw = text_width_px(axis_spec.xlabel, font_scale);
+      draw_text(cv, plot_l + (plot_w - tw) / 2, plot_b + 36, axis_spec.xlabel, font_scale,
+                Color{0, 0, 0, 255});
+    }
+    if (!axis_spec.ylabel.empty()) {
+      draw_text_vertical(cv, x0 + 2, plot_t + 4, axis_spec.ylabel, font_scale, Color{0, 0, 0, 255});
+    }
+
     for (std::size_t s = 0; s < axis.series().size(); ++s) {
       const auto color = palette(s);
       const auto& series = axis.series()[s];
       if (series.x.size() < 2) {
         continue;
       }
+      const int lw = series.spec.has_line_width
+                         ? std::max(1, static_cast<int>(std::round(series.spec.line_width_pt * dpi / 72.0)))
+                         : line_thickness;
       for (std::size_t i = 1; i < series.x.size(); ++i) {
         if (!std::isfinite(series.x[i - 1]) || !std::isfinite(series.y[i - 1]) ||
             !std::isfinite(series.x[i]) || !std::isfinite(series.y[i])) {
           continue;
         }
         cv.line(map_x(series.x[i - 1]), map_y(series.y[i - 1]), map_x(series.x[i]),
-                map_y(series.y[i]), color);
+                map_y(series.y[i]), color, lw);
       }
     }
   }
