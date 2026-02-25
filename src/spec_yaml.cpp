@@ -4,6 +4,7 @@
 #include <cctype>
 #include <string>
 
+#include "gnuplotpp/presets.hpp"
 #include <yaml-cpp/yaml.h>
 
 namespace gnuplotpp {
@@ -89,6 +90,17 @@ ColorNorm parse_color_norm(const std::string& s) {
   throw std::invalid_argument("unsupported color norm: " + s);
 }
 
+StyleProfile parse_style_profile(const std::string& s) {
+  const auto l = lower(trim(s));
+  if (l == "science") return StyleProfile::Science;
+  if (l == "ieee_strict") return StyleProfile::IEEE_Strict;
+  if (l == "aiaa_strict") return StyleProfile::AIAA_Strict;
+  if (l == "presentation") return StyleProfile::Presentation;
+  if (l == "darkprintsafe" || l == "dark_print_safe") return StyleProfile::DarkPrintSafe;
+  if (l == "tufte_minimal") return StyleProfile::Tufte_Minimal;
+  throw std::invalid_argument("unsupported style profile: " + s);
+}
+
 bool parse_figure_key(FigureSpec& figure, const std::string& key, const std::string& value) {
   if (key == "title") {
     figure.title = value;
@@ -112,6 +124,8 @@ bool parse_figure_key(FigureSpec& figure, const std::string& key, const std::str
     figure.style.font = value;
   } else if (key == "font_pt") {
     figure.style.font_pt = std::stod(value);
+  } else if (key == "profile") {
+    apply_style_profile(figure, parse_style_profile(value));
   } else {
     return false;
   }
@@ -257,6 +271,12 @@ void parse_figure(FigureSpec& figure, const YAML::Node& node, const YamlLoadOpti
       parse_formats(figure, kv.second);
       continue;
     }
+    if (!kv.second.IsScalar()) {
+      if (options.strict_unknown_keys) {
+        throw std::runtime_error("expected scalar for key 'figure." + key + "'");
+      }
+      continue;
+    }
     const auto value = scalar_as_string(kv.second, "figure." + key);
     const bool known = parse_figure_key(figure, key, value);
     if (!known && options.strict_unknown_keys) {
@@ -284,6 +304,13 @@ void parse_axis_map(AxesSpec& axis, const YAML::Node& axis_node, const YamlLoadO
         if (!known && options.strict_unknown_keys) {
           throw std::runtime_error("unknown axis key: '" + full + "'");
         }
+      }
+      continue;
+    }
+
+    if (!value_node.IsScalar()) {
+      if (options.strict_unknown_keys) {
+        throw std::runtime_error("expected scalar for key 'axes." + key + "'");
       }
       continue;
     }
