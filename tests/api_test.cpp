@@ -3,7 +3,9 @@
 #include "gnuplotpp/facet.hpp"
 #include "gnuplotpp/plot.hpp"
 #include "gnuplotpp/presets.hpp"
+#include "gnuplotpp/spec_yaml.hpp"
 #include "gnuplotpp/statistics.hpp"
+#include "gnuplotpp/templates.hpp"
 #include "gnuplotpp/theme.hpp"
 
 #include <cassert>
@@ -98,6 +100,16 @@ int main() {
   std::vector<double> vw;
   violin_profile(y, vy, vw, 32);
   assert(vy.size() == vw.size());
+  std::vector<double> qx;
+  std::vector<double> qy;
+  qq_plot_normal(y, qx, qy);
+  assert(qx.size() == y.size());
+  const auto bx = box_summary(y);
+  assert(bx.whisker_high >= bx.whisker_low);
+  std::vector<double> exx;
+  std::vector<double> exy;
+  confidence_ellipse(y, y, 2.0, exx, exy, 64);
+  assert(exx.size() == 64);
 
   const auto csv_path = std::filesystem::temp_directory_path() / "gnuplotpp_data_test.csv";
   {
@@ -125,6 +137,32 @@ int main() {
   FigureSpec loaded = built_spec;
   assert(load_theme_json(theme_path, loaded));
   std::filesystem::remove(theme_path);
+
+  FigureSpec ts;
+  AxesSpec ta;
+  apply_plot_template(ts, ta, PlotTemplate::EstimationBand);
+  assert(!ts.title.empty());
+  const auto tdir = std::filesystem::temp_directory_path() / "gnuplotpp_template_gallery";
+  write_template_gallery_yaml(tdir);
+  assert(std::filesystem::exists(tdir / "estimation_band.yaml"));
+  std::filesystem::remove_all(tdir);
+
+  const auto yaml_path = std::filesystem::temp_directory_path() / "gnuplotpp_yaml_spec.yaml";
+  {
+    std::ofstream os(yaml_path);
+    os << "figure:\n"
+          "  title: yaml\n"
+          "  preset: IEEE_SingleColumn\n"
+          "  formats: [pdf, svg]\n"
+          "axes:\n"
+          "  - title: a0\n"
+          "    xlabel: t\n"
+          "    ylabel: y\n";
+  }
+  const auto ys = load_yaml_figure_spec(yaml_path);
+  assert(ys.figure.title == "yaml");
+  assert(!ys.axes.empty());
+  std::filesystem::remove(yaml_path);
 
   const auto no_backend = fig.save("out");
   assert(!no_backend.ok);

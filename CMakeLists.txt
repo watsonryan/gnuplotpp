@@ -24,7 +24,9 @@ add_library(gnuplotpp
   src/figure.cpp
   src/gnuplot_backend.cpp
   src/presets.cpp
+  src/spec_yaml.cpp
   src/statistics.cpp
+  src/templates.cpp
   src/theme.cpp
 )
 
@@ -78,6 +80,9 @@ if(BUILD_EXAMPLES)
 
   add_executable(interactive_facet_example examples/interactive_facet_example.cpp)
   target_link_libraries(interactive_facet_example PRIVATE gnuplotpp::gnuplotpp)
+
+  add_executable(yaml_spec_example examples/yaml_spec_example.cpp)
+  target_link_libraries(yaml_spec_example PRIVATE gnuplotpp::gnuplotpp)
 endif()
 
 if(BUILD_TESTING)
