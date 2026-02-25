@@ -58,11 +58,11 @@ int main(int argc, char** argv) {
     SeriesSpec s;
     s.type = SeriesType::Line;
     s.has_line_width = true;
-    s.line_width_pt = 0.5;
+    s.line_width_pt = 2.0;
     s.has_color = true;
     s.color = "#000000";
     s.has_opacity = true;
-    s.opacity = 0.08;
+    s.opacity = 0.3;
     fig.axes(0).add_series(s, t, y);
   }
 
