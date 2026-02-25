@@ -83,6 +83,9 @@ if(BUILD_EXAMPLES)
 
   add_executable(yaml_spec_example examples/yaml_spec_example.cpp)
   target_link_libraries(yaml_spec_example PRIVATE gnuplotpp::gnuplotpp)
+
+  add_executable(stats_plot_examples examples/stats_plot_examples.cpp)
+  target_link_libraries(stats_plot_examples PRIVATE gnuplotpp::gnuplotpp)
 endif()
 
 if(BUILD_TESTING)
