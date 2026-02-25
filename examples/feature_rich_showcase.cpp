@@ -28,11 +28,12 @@ gnuplotpp::FigureSpec base_spec(const std::string& title) {
            .manifest(true)
            .spec();
   fs.text_mode = TextMode::Enhanced;
-  fs.style.font = "Times";
-  fs.style.font_pt = 11.0;
-  fs.style.line_width_pt = 1.8;
-  fs.style.point_size = 0.8;
-  fs.size = FigureSizeInches{.w = 4.6, .h = 3.2};
+  // Screen-review readable while still IEEE-like in proportions.
+  fs.style.font = "Helvetica";
+  fs.style.font_pt = 13.0;
+  fs.style.line_width_pt = 2.2;
+  fs.style.point_size = 1.0;
+  fs.size = FigureSizeInches{.w = 5.4, .h = 3.8};
   return fs;
 }
 
@@ -125,6 +126,8 @@ int main(int argc, char** argv) {
     ax.legend_spec.position = LegendPosition::BottomLeft;
     ax.legend_spec.columns = 1;
     ax.legend_spec.boxed = true;
+    ax.legend_spec.has_font_pt = true;
+    ax.legend_spec.font_pt = 11.5;
     ax.has_ytick_step = true;
     ax.ytick_step = 0.2;
     ax.has_xlim = true;
@@ -139,7 +142,7 @@ int main(int argc, char** argv) {
     band.has_opacity = true;
     band.opacity = 0.20;
     fig.axes(0).add_band(band, t, lo, hi);
-    fig.axes(0).add_series(SeriesSpec{.label = "mean", .has_line_width = true, .line_width_pt = 2.3},
+    fig.axes(0).add_series(SeriesSpec{.label = "mean", .has_line_width = true, .line_width_pt = 2.8},
                            t,
                            mean);
     std::vector<double> t_obs;
@@ -168,6 +171,8 @@ int main(int argc, char** argv) {
     ax.legend = true;
     ax.legend_spec.position = LegendPosition::TopRight;
     ax.legend_spec.boxed = true;
+    ax.legend_spec.has_font_pt = true;
+    ax.legend_spec.font_pt = 11.5;
     ax.yformat = "%.0f";
     ax.xformat = "%.1f";
     ax.has_xlim = true;
@@ -182,7 +187,7 @@ int main(int argc, char** argv) {
     hist.has_opacity = true;
     hist.opacity = 0.45;
     fig.axes(0).add_histogram(hist, bins, counts);
-    fig.axes(0).add_series(SeriesSpec{.label = "KDE", .has_line_width = true, .line_width_pt = 1.8},
+    fig.axes(0).add_series(SeriesSpec{.label = "KDE", .has_line_width = true, .line_width_pt = 2.6},
                            bins,
                            kde_scaled);
     if (render_figure(fig, out_dir / "hist_kde" / "figures") != 0) {
@@ -192,7 +197,7 @@ int main(int argc, char** argv) {
 
   {
     FigureSpec fs = base_spec("Heatmap Samples");
-    fs.size = FigureSizeInches{.w = 3.8, .h = 3.8};
+    fs.size = FigureSizeInches{.w = 4.6, .h = 4.6};
     Figure fig(fs);
     AxesSpec ax;
     ax.title = "2D Density Field";
@@ -227,6 +232,8 @@ int main(int argc, char** argv) {
     ax.legend_spec.position = LegendPosition::BottomRight;
     ax.legend_spec.columns = 1;
     ax.legend_spec.boxed = true;
+    ax.legend_spec.has_font_pt = true;
+    ax.legend_spec.font_pt = 11.5;
     ax.has_y2lim = true;
     ax.y2min = 0.0;
     ax.y2max = 1.0;
@@ -238,8 +245,8 @@ int main(int argc, char** argv) {
       y1[i] = 0.9 * std::exp(-0.03 * t[i]) * std::cos(0.62 * t[i]);
       y2[i] = 0.9 * std::exp(-0.03 * t[i]) * std::sin(0.62 * t[i]);
     }
-    fig.axes(0).add_series(SeriesSpec{.label = "signal A"}, t, y1);
-    fig.axes(0).add_series(SeriesSpec{.label = "signal B"}, t, y2);
+    fig.axes(0).add_series(SeriesSpec{.label = "signal A", .has_line_width = true, .line_width_pt = 2.6}, t, y1);
+    fig.axes(0).add_series(SeriesSpec{.label = "signal B", .has_line_width = true, .line_width_pt = 2.6}, t, y2);
     std::vector<double> p_event(200);
     for (int i = 0; i < 200; ++i) {
       p_event[static_cast<std::size_t>(i)] = 1.0 / (1.0 + std::exp(-(t[static_cast<std::size_t>(i)] - 10.0) / 1.8));
