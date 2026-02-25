@@ -1,0 +1,30 @@
+cmake_minimum_required(VERSION 3.20)
+project(gnuplotpp VERSION 0.1.0 LANGUAGES CXX)
+
+option(ENABLE_PLOTTING "Enable gnuplot rendering support" ON)
+option(BUILD_TESTING "Build tests" ON)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+add_library(gnuplotpp
+  src/figure.cpp
+)
+
+add_library(gnuplotpp::gnuplotpp ALIAS gnuplotpp)
+
+target_include_directories(gnuplotpp
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+
+target_compile_features(gnuplotpp PUBLIC cxx_std_20)
+
+if(BUILD_TESTING)
+  enable_testing()
+  add_executable(gnuplotpp_api_test tests/api_test.cpp)
+  target_link_libraries(gnuplotpp_api_test PRIVATE gnuplotpp::gnuplotpp)
+  add_test(NAME gnuplotpp_api_test COMMAND gnuplotpp_api_test)
+endif()
