@@ -65,6 +65,8 @@ struct FigureSpec {
   bool share_x = false;
   bool share_y = false;
   bool hide_inner_tick_labels = false;
+  bool auto_layout = true;
+  bool interactive_preview = false;
 };
 
 /** @brief Legend placement presets. */
@@ -127,6 +129,7 @@ struct AxesSpec {
   bool grid = false;
   bool legend = true;
   LegendSpec legend_spec{};
+  bool enable_crosshair = false;
 
   bool has_xlim = false;
   double xmin = 0.0;

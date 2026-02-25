@@ -375,6 +375,25 @@ void emit_typed_objects(std::ostream& os, const AxesSpec& axis_spec) {
   }
 }
 
+void emit_auto_layout(std::ostream& os, const FigureSpec& spec, const AxesSpec& axis_spec) {
+  if (!spec.auto_layout) {
+    return;
+  }
+  // Heuristic margins in character units for single-panel readability.
+  const std::size_t yl = axis_spec.ylabel.size();
+  const std::size_t y2l = axis_spec.y2label.size();
+  const std::size_t xl = axis_spec.xlabel.size();
+  const std::size_t tl = axis_spec.title.size();
+  const int lmargin = static_cast<int>(std::clamp<std::size_t>(8 + yl / 2, 8, 16));
+  const int rmargin = static_cast<int>(std::clamp<std::size_t>(4 + y2l / 2, 4, 14));
+  const int bmargin = static_cast<int>(std::clamp<std::size_t>(4 + xl / 10, 4, 8));
+  const int tmargin = static_cast<int>(std::clamp<std::size_t>(2 + tl / 18, 2, 6));
+  os << "set lmargin " << lmargin << "\n";
+  os << "set rmargin " << rmargin << "\n";
+  os << "set bmargin " << bmargin << "\n";
+  os << "set tmargin " << tmargin << "\n";
+}
+
 void emit_plot_body(std::ostream& os,
                     const Figure& fig,
                     const std::vector<std::vector<std::filesystem::path>>& data_files) {
@@ -422,6 +441,7 @@ void emit_plot_body(std::ostream& os,
   for (std::size_t axis_idx = 0; axis_idx < all_axes.size(); ++axis_idx) {
     const auto& axis = all_axes[axis_idx];
     const auto& axis_spec = axis.spec();
+    emit_auto_layout(os, spec, axis_spec);
 
     os << "unset title\n";
     os << "unset xlabel\n";
@@ -440,7 +460,12 @@ void emit_plot_body(std::ostream& os,
 
     const bool legend_enabled = axis_spec.legend && axis_spec.legend_spec.enabled;
     if (legend_enabled) {
-      os << "set key " << legend_position_token(axis_spec.legend_spec.position) << "\n";
+      LegendPosition legend_pos = axis_spec.legend_spec.position;
+      if (spec.auto_layout && axis.series().size() >= 4 &&
+          legend_pos == LegendPosition::TopRight) {
+        legend_pos = LegendPosition::OutsideRight;
+      }
+      os << "set key " << legend_position_token(legend_pos) << "\n";
       os << "set key maxcols " << std::max(1, axis_spec.legend_spec.columns) << "\n";
       os << "set key " << (axis_spec.legend_spec.opaque ? "opaque" : "noopaque") << "\n";
       os << "set key box linewidth " << (axis_spec.legend_spec.boxed ? "0.5" : "0.0") << "\n";
@@ -473,6 +498,12 @@ void emit_plot_body(std::ostream& os,
 
     if (axis_spec.grid || spec.style.grid) {
       os << "set grid xtics ytics linewidth 0.35 linecolor rgb '#e2e2e2'\n";
+    }
+    if (axis_spec.enable_crosshair) {
+      os << "set mouse\n";
+      os << "set mxtics 4\n";
+      os << "set mytics 4\n";
+      os << "set grid mxtics mytics linewidth 0.25 linecolor rgb '#f0f0f0'\n";
     }
     if (axis_spec.xlog) {
       os << "set logscale x\n";
@@ -703,6 +734,19 @@ RenderResult GnuplotBackend::render(const Figure& fig, const std::filesystem::pa
     result.message = msg_text("failed to finalize gnuplot script", script_path.string());
     gnuplotpp::log::Error(result.message);
     return result;
+  }
+
+  if (fig.spec().interactive_preview) {
+    const auto preview_path = out_dir / "tmp" / "interactive_preview.gp";
+    std::ofstream preview_os(preview_path);
+    if (preview_os.is_open()) {
+      preview_os << "set encoding utf8\n";
+      preview_os << "set terminal qt persist\n";
+      emit_plot_body(preview_os, fig, data_files);
+      preview_os << "pause mouse close\n";
+    } else {
+      gnuplotpp::log::Warn("failed to write interactive preview script: ", preview_path.string());
+    }
   }
 
   const std::string check_cmd = "command -v " + executable_ + " >/dev/null 2>&1";

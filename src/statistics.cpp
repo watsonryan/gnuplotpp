@@ -84,6 +84,50 @@ void percentile_band(const std::vector<std::vector<double>>& ensemble,
   }
 }
 
+void fan_chart_bands(const std::vector<std::vector<double>>& ensemble,
+                     const std::vector<double>& quantiles,
+                     std::vector<std::vector<double>>& lows,
+                     std::vector<std::vector<double>>& highs) {
+  lows.clear();
+  highs.clear();
+  if (quantiles.size() < 2 || quantiles.size() % 2 != 0) {
+    return;
+  }
+  const std::size_t half = quantiles.size() / 2;
+  lows.resize(half);
+  highs.resize(half);
+  for (std::size_t i = 0; i < half; ++i) {
+    const double ql = quantiles[i];
+    const double qh = quantiles[quantiles.size() - 1 - i];
+    percentile_band(ensemble, ql, qh, lows[i], highs[i]);
+  }
+}
+
+void violin_profile(std::span<const double> samples,
+                    std::vector<double>& y_grid,
+                    std::vector<double>& half_width,
+                    std::size_t points) {
+  y_grid.clear();
+  half_width.clear();
+  if (samples.empty() || points < 2) {
+    return;
+  }
+  const auto [it_min, it_max] = std::minmax_element(samples.begin(), samples.end());
+  const double y_min = *it_min;
+  const double y_max = *it_max;
+  y_grid.resize(points);
+  for (std::size_t i = 0; i < points; ++i) {
+    y_grid[i] = y_min + (y_max - y_min) * static_cast<double>(i) / static_cast<double>(points - 1);
+  }
+  half_width = gaussian_kde(samples, y_grid);
+  const double peak = *std::max_element(half_width.begin(), half_width.end());
+  if (peak > 0.0) {
+    for (double& v : half_width) {
+      v /= peak;
+    }
+  }
+}
+
 std::vector<double> moving_average(std::span<const double> y, std::size_t window) {
   if (y.empty() || window == 0) {
     return {};

@@ -41,6 +41,30 @@ void percentile_band(const std::vector<std::vector<double>>& ensemble,
                      std::vector<double>& high);
 
 /**
+ * @brief Build multiple percentile ribbons for fan-chart visualization.
+ * @param ensemble Row-major series vectors with equal length.
+ * @param quantiles Ascending quantiles in (0,1), e.g. {0.1,0.25,0.75,0.9}.
+ * @param lows Output low bands matching each ribbon.
+ * @param highs Output high bands matching each ribbon.
+ */
+void fan_chart_bands(const std::vector<std::vector<double>>& ensemble,
+                     const std::vector<double>& quantiles,
+                     std::vector<std::vector<double>>& lows,
+                     std::vector<std::vector<double>>& highs);
+
+/**
+ * @brief Approximate violin density profile.
+ * @param samples Input values.
+ * @param y_grid Output y positions.
+ * @param half_width Output normalized half-width density [0,1].
+ * @param points Number of y-grid points.
+ */
+void violin_profile(std::span<const double> samples,
+                    std::vector<double>& y_grid,
+                    std::vector<double>& half_width,
+                    std::size_t points = 120);
+
+/**
  * @brief Simple moving average.
  * @param y Input signal.
  * @param window Window length.
