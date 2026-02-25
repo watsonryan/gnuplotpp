@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
   apply_preset_defaults(fs);
   fs.rows = 1;
   fs.cols = 1;
-  fs.formats = {OutputFormat::Pdf, OutputFormat::Svg, OutputFormat::Eps};
+  fs.formats = {OutputFormat::Pdf, OutputFormat::Svg, OutputFormat::Eps, OutputFormat::Png};
   fs.title = "Three-Method Comparison";
   fs.style.line_width_pt = 1.5;
 

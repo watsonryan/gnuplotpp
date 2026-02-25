@@ -93,9 +93,9 @@ std::string terminal_for(OutputFormat format, const FigureSpec& spec) {
          << "' linewidth " << lw;
       return os.str();
     case OutputFormat::Png:
-      os << "set terminal pngcairo size " << (spec.size.w * 200.0) << ","
-         << (spec.size.h * 200.0) << " enhanced font '" << spec.style.font << ","
-         << spec.style.font_pt << "' linewidth " << lw;
+      os << "set terminal pngcairo size " << (spec.size.w * 600.0) << ","
+         << (spec.size.h * 600.0) << " enhanced background rgb 'white' font '"
+         << spec.style.font << "," << spec.style.font_pt << "' linewidth " << lw;
       return os.str();
   }
   return {};
