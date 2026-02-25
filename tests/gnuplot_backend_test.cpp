@@ -74,7 +74,7 @@ int main() {
   assert(script.find("set terminal pdfcairo") != std::string::npos);
   assert(script.find("set monochrome") == std::string::npos);
   assert(script.find("dt 1") != std::string::npos);
-  assert(script.find("lc rgb '#40000000'") != std::string::npos);
+  assert(script.find("lc rgb '#bf000000'") != std::string::npos);
   assert(script.find("plot") != std::string::npos);
 
   const auto data0 = out_dir / "tmp" / "ax0_series0.dat";

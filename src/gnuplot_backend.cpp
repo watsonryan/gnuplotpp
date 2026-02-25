@@ -94,8 +94,10 @@ std::string clamp_opacity_color(const std::string& color, const double opacity) 
   if (!is_hex_rgb(color)) {
     return color;
   }
+  // gnuplot cairo uses ARGB with inverted alpha semantics:
+  // 00 = fully opaque, ff = fully transparent.
   const int alpha =
-      static_cast<int>(std::lround(clamped * 255.0));  // gnuplot expects AARRGGBB
+      static_cast<int>(std::lround((1.0 - clamped) * 255.0));
   std::ostringstream os;
   os << "#" << std::hex << std::setfill('0') << std::nouppercase << std::setw(2) << alpha
      << color.substr(1);
