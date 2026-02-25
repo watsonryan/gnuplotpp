@@ -136,7 +136,7 @@ Violin with raw samples:
 
 Confidence ellipse:
 
-<img src="docs/images/stats_confidence_ellipse.png" alt="2-sigma confidence ellipse" width="900" />
+<img src="docs/images/stats_confidence_ellipse.png" alt="1, 2, and 3-sigma confidence ellipses" width="900" />
 
 Autocorrelation:
 
@@ -153,6 +153,16 @@ Generated from:
 Direct labels, minimal framing, and low-ink reference guides:
 
 <img src="docs/images/tufte_minimal_example.png" alt="Tufte minimal style example" width="900" />
+
+### Monte Carlo Ensemble (+/-3 Sigma)
+
+Generated from:
+
+```bash
+./build/dev-debug/monte_carlo_alpha_example --out out/monte_carlo_alpha_example --npaths 1000 --lw 2 --alpha 0.3
+```
+
+<img src="docs/images/monte_carlo_alpha_example.png" alt="Monte Carlo ensemble with plus/minus 3-sigma bounds" width="900" />
 
 Expected outputs:
 
