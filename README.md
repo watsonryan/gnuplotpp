@@ -56,6 +56,16 @@ cmake --build --preset build-debug
 ctest --preset test-debug
 ```
 
+## Documentation
+
+- [Documentation Index](docs/README.md)
+- [Getting Started](docs/GETTING_STARTED.md)
+- [Styling and Presets](docs/STYLING_AND_PRESETS.md)
+- [Statistical Plot Guide](docs/STATISTICS_GUIDE.md)
+- [Examples Cookbook](docs/EXAMPLES.md)
+- [Troubleshooting](docs/TROUBLESHOOTING.md)
+- [Full Plot Controls](docs/PLOT_CONTROLS.md)
+
 ## Architecture
 
 ```mermaid
