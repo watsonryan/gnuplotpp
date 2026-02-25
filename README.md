@@ -17,7 +17,7 @@ Pure C++20 plotting API with a gnuplot renderer for figures.
 - Tick/format controls (major step, minor count, format strings)
 - Text mode selection (`Enhanced`, `Plain`, `LaTeX` toggle)
 - Journal-like presets (`IEEE_Tran`, `Nature_1Col`, `Elsevier_1Col`)
-- Style profiles (`Science`, `IEEE_Strict`, `AIAA_Strict`, `Presentation`, `DarkPrintSafe`)
+- Style profiles (`Science`, `IEEE_Strict`, `AIAA_Strict`, `Presentation`, `DarkPrintSafe`, `Tufte_Minimal`)
 - Typed annotations/objects (labels, arrows, rectangles)
 - Fluent `FigureBuilder` API
 - Theme JSON save/load (`save_theme_json` / `load_theme_json`)
@@ -105,6 +105,7 @@ When using `IEEE_SingleColumn` or `IEEE_DoubleColumn`, renderer behavior is tigh
 ./build/dev-debug/interactive_facet_example --out out/interactive_facet_example
 ./build/dev-debug/yaml_spec_example --out out/yaml_spec_example
 ./build/dev-debug/stats_plot_examples --out out/stats_plot_examples
+./build/dev-debug/tufte_minimal_example --out out/tufte_minimal_example
 ```
 
 ### Annotated IEEE Example
@@ -140,6 +141,18 @@ Confidence ellipse:
 Autocorrelation:
 
 <img src="docs/images/stats_autocorrelation.png" alt="Autocorrelation example" width="900" />
+
+### Tufte Minimal Example
+
+Generated from:
+
+```bash
+./build/dev-debug/tufte_minimal_example --out out/tufte_minimal_example
+```
+
+Direct labels, minimal framing, and low-ink reference guides:
+
+<img src="docs/images/tufte_minimal_example.png" alt="Tufte minimal style example" width="900" />
 
 Expected outputs:
 
