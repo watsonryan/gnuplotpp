@@ -126,6 +126,14 @@ void apply_style_profile(FigureSpec& spec, StyleProfile profile) {
       spec.style.grid = true;
       spec.palette = ColorPalette::Grayscale;
       break;
+    case StyleProfile::Tufte_Minimal:
+      spec.style.font = "Helvetica";
+      spec.style.font_pt = 10.0;
+      spec.style.line_width_pt = 1.8;
+      spec.style.point_size = 0.6;
+      spec.style.grid = false;
+      spec.palette = ColorPalette::Grayscale;
+      break;
   }
 }
 

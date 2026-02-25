@@ -86,6 +86,9 @@ if(BUILD_EXAMPLES)
 
   add_executable(stats_plot_examples examples/stats_plot_examples.cpp)
   target_link_libraries(stats_plot_examples PRIVATE gnuplotpp::gnuplotpp)
+
+  add_executable(tufte_minimal_example examples/tufte_minimal_example.cpp)
+  target_link_libraries(tufte_minimal_example PRIVATE gnuplotpp::gnuplotpp)
 endif()
 
 if(BUILD_TESTING)

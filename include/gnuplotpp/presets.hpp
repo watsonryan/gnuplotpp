@@ -5,7 +5,14 @@
 namespace gnuplotpp {
 
 /** @brief High-level style bundles for common publication/presentation looks. */
-enum class StyleProfile { Science, IEEE_Strict, AIAA_Strict, Presentation, DarkPrintSafe };
+enum class StyleProfile {
+  Science,
+  IEEE_Strict,
+  AIAA_Strict,
+  Presentation,
+  DarkPrintSafe,
+  Tufte_Minimal
+};
 
 /** @brief Resolved size/style defaults for one preset. */
 struct PresetDefaults {

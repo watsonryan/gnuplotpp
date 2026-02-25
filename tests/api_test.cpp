@@ -71,6 +71,10 @@ int main() {
   apply_style_profile(spec, StyleProfile::Presentation);
   assert(spec.palette == ColorPalette::Viridis);
   assert(spec.style.font_pt >= 12.0);
+  apply_style_profile(spec, StyleProfile::Tufte_Minimal);
+  assert(spec.palette == ColorPalette::Grayscale);
+  assert(!spec.style.grid);
+  assert(spec.style.line_width_pt >= 1.5);
 
   FigureSpec built_spec = FigureBuilder(spec).layout(1, 1).manifest(true).spec();
   assert(built_spec.write_manifest);
