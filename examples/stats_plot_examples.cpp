@@ -4,6 +4,7 @@
 #include "gnuplotpp/presets.hpp"
 #include "gnuplotpp/statistics.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <filesystem>
 #include <random>
@@ -15,12 +16,19 @@ namespace {
 gnuplotpp::FigureSpec make_spec(const std::string& title) {
   using namespace gnuplotpp;
   FigureSpec fs;
-  fs.preset = Preset::IEEE_DoubleColumn;
+  fs.preset = Preset::Custom;
   apply_preset_defaults(fs);
-  fs.size = FigureSizeInches{.w = 4.8, .h = 3.4};
+  fs.size = FigureSizeInches{.w = 5.4, .h = 3.8};
   fs.title = title;
+  fs.text_mode = TextMode::Enhanced;
   fs.formats = {OutputFormat::Pdf, OutputFormat::Png, OutputFormat::Svg};
   fs.palette = ColorPalette::Tab10;
+  fs.style.font = "Helvetica";
+  fs.style.font_pt = 15.0;
+  fs.style.line_width_pt = 2.2;
+  fs.style.point_size = 1.10;
+  fs.style.grid = true;
+  fs.font_fallbacks = {"Arial", "Nimbus Sans", "DejaVu Sans", "Helvetica"};
   fs.panel_labels = false;
   fs.caption.clear();
   fs.auto_layout = true;
@@ -66,28 +74,52 @@ int main(int argc, char** argv) {
     auto fs = make_spec("Q-Q Plot vs Normal");
     Figure fig(fs);
     AxesSpec ax;
-    ax.title = "Q-Q Plot";
+    ax.title = "Normal Q-Q Plot";
     ax.xlabel = "Theoretical Quantile";
     ax.ylabel = "Sample Quantile";
     ax.grid = true;
     ax.legend = true;
+    ax.legend_spec.position = LegendPosition::TopLeft;
+    ax.legend_spec.boxed = true;
+    ax.legend_spec.opaque = true;
+    ax.legend_spec.has_font_pt = true;
+    ax.legend_spec.font_pt = 13.0;
+    ax.has_xtick_step = true;
+    ax.xtick_step = 1.0;
+    ax.has_ytick_step = true;
+    ax.ytick_step = 1.0;
     fig.axes(0).set(ax);
 
     std::vector<double> q_theory, q_sample;
     qq_plot_normal(samples, q_theory, q_sample);
-    fig.axes(0).add_series(SeriesSpec{.type = SeriesType::Scatter, .label = "samples"},
+    fig.axes(0).add_series(SeriesSpec{.type = SeriesType::Scatter,
+                                      .label = "Samples",
+                                      .has_color = true,
+                                      .color = "#1f77b4"},
                            q_theory,
                            q_sample);
 
-    const double x0 = q_theory.front();
-    const double x1 = q_theory.back();
-    const double y0 = q_sample.front();
-    const double y1 = q_sample.back();
-    const double slope = (y1 - y0) / (x1 - x0);
-    std::vector<double> x_line{x0, x1};
-    std::vector<double> y_line{y0, y0 + slope * (x1 - x0)};
+    const auto [x_min_it, x_max_it] = std::minmax_element(q_theory.begin(), q_theory.end());
+    const auto [y_min_it, y_max_it] = std::minmax_element(q_sample.begin(), q_sample.end());
+    const double min_axis = std::min(*x_min_it, *y_min_it);
+    const double max_axis = std::max(*x_max_it, *y_max_it);
+    const double pad = 0.12 * (max_axis - min_axis);
+    ax.has_xlim = true;
+    ax.xmin = min_axis - pad;
+    ax.xmax = max_axis + pad;
+    ax.has_ylim = true;
+    ax.ymin = min_axis - pad;
+    ax.ymax = max_axis + pad;
+    fig.axes(0).set(ax);
+
+    std::vector<double> x_line{min_axis - pad, max_axis + pad};
+    std::vector<double> y_line{min_axis - pad, max_axis + pad};
     fig.axes(0).add_series(
-        SeriesSpec{.label = "reference", .has_line_width = true, .line_width_pt = 2.0},
+        SeriesSpec{.label = "Reference (y = x)",
+                   .has_line_width = true,
+                   .line_width_pt = 2.4,
+                   .has_color = true,
+                   .color = "#d95f02"},
         x_line,
         y_line);
 
@@ -103,18 +135,45 @@ int main(int argc, char** argv) {
     ax.xlabel = "Relative Density Width";
     ax.ylabel = "Value";
     ax.grid = true;
-    ax.legend = true;
+    ax.legend = false;
+    ax.has_xlim = true;
+    ax.xmin = -1.05;
+    ax.xmax = 1.05;
+    ax.has_xtick_step = true;
+    ax.xtick_step = 0.25;
     fig.axes(0).set(ax);
 
     std::vector<double> y_grid, half_w;
     violin_profile(samples, y_grid, half_w, 180);
+    const auto [vy_min_it, vy_max_it] = std::minmax_element(y_grid.begin(), y_grid.end());
     std::vector<double> x_l(half_w.size()), x_r(half_w.size());
     for (std::size_t i = 0; i < half_w.size(); ++i) {
       x_l[i] = -half_w[i];
       x_r[i] = half_w[i];
     }
-    fig.axes(0).add_series(SeriesSpec{.label = "left"}, x_l, y_grid);
-    fig.axes(0).add_series(SeriesSpec{.label = "right"}, x_r, y_grid);
+    fig.axes(0).add_series(SeriesSpec{.label = "left",
+                                      .has_line_width = true,
+                                      .line_width_pt = 2.6,
+                                      .has_color = true,
+                                      .color = "#2c7fb8"},
+                           x_l,
+                           y_grid);
+    fig.axes(0).add_series(SeriesSpec{.label = "right",
+                                      .has_line_width = true,
+                                      .line_width_pt = 2.6,
+                                      .has_color = true,
+                                      .color = "#2c7fb8"},
+                           x_r,
+                           y_grid);
+    std::vector<double> x_mid{0.0, 0.0};
+    std::vector<double> y_mid{*vy_min_it, *vy_max_it};
+    fig.axes(0).add_series(SeriesSpec{.label = "center",
+                                      .has_line_width = true,
+                                      .line_width_pt = 1.5,
+                                      .has_color = true,
+                                      .color = "#1b5e85"},
+                           x_mid,
+                           y_mid);
 
     if (render(fig, out_root / "violin_profile" / "figures") != 0) return 1;
   }
@@ -125,16 +184,26 @@ int main(int argc, char** argv) {
     Figure fig(fs);
     AxesSpec ax;
     ax.title = "Box Summary (Tukey)";
-    ax.xlabel = "group";
-    ax.ylabel = "value";
+    ax.xlabel = "Group";
+    ax.ylabel = "Value";
     ax.grid = true;
     ax.legend = false;
     ax.has_xlim = true;
-    ax.xmin = 0.5;
-    ax.xmax = 1.5;
+    ax.xmin = 0.7;
+    ax.xmax = 1.3;
+    ax.has_xtick_step = true;
+    ax.xtick_step = 0.1;
     fig.axes(0).set(ax);
 
     const auto box = box_summary(samples);
+    const auto [smin_it, smax_it] = std::minmax_element(samples.begin(), samples.end());
+    const double ypad = 0.10 * (*smax_it - *smin_it);
+    ax.has_ylim = true;
+    ax.ymin = *smin_it - ypad;
+    ax.ymax = *smax_it + ypad;
+    ax.gnuplot_commands = {"set xtics ('Sample A' 1.0) font 'Helvetica,13'"};
+    fig.axes(0).set(ax);
+
     std::vector<double> x_pts;
     std::vector<double> y_pts;
     x_pts.reserve(300);
@@ -145,22 +214,28 @@ int main(int argc, char** argv) {
       y_pts.push_back(samples[static_cast<std::size_t>(i)]);
     }
     fig.axes(0).add_series(
-        SeriesSpec{.type = SeriesType::Scatter, .label = "", .has_color = true, .color = "#777777"},
+        SeriesSpec{.type = SeriesType::Scatter,
+                   .label = "",
+                   .has_color = true,
+                   .color = "#4d4d4d",
+                   .has_opacity = true,
+                   .opacity = 0.55},
         x_pts,
         y_pts);
 
     ax.gnuplot_commands = {
-        "set object 1 rect from 0.85," + std::to_string(box.q1) + " to 1.15," +
-            std::to_string(box.q3) + " fc rgb '#7aa6d8' fs solid 0.35 border lc rgb '#2f2f2f'",
-        "set arrow 1 from 0.85," + std::to_string(box.median) + " to 1.15," +
+        "set xtics ('Sample A' 1.0) font 'Helvetica,13'",
+        "set object 1 rect from 0.88," + std::to_string(box.q1) + " to 1.12," +
+            std::to_string(box.q3) + " fc rgb '#4c78a8' fs solid 0.30 border lc rgb '#2f2f2f'",
+        "set arrow 1 from 0.88," + std::to_string(box.median) + " to 1.12," +
             std::to_string(box.median) + " nohead lw 2.0 lc rgb '#1f1f1f'",
         "set arrow 2 from 1.0," + std::to_string(box.whisker_low) + " to 1.0," +
             std::to_string(box.q1) + " nohead lw 1.5 lc rgb '#1f1f1f'",
         "set arrow 3 from 1.0," + std::to_string(box.q3) + " to 1.0," +
             std::to_string(box.whisker_high) + " nohead lw 1.5 lc rgb '#1f1f1f'",
-        "set arrow 4 from 0.93," + std::to_string(box.whisker_low) + " to 1.07," +
+        "set arrow 4 from 0.95," + std::to_string(box.whisker_low) + " to 1.05," +
             std::to_string(box.whisker_low) + " nohead lw 1.5 lc rgb '#1f1f1f'",
-        "set arrow 5 from 0.93," + std::to_string(box.whisker_high) + " to 1.07," +
+        "set arrow 5 from 0.95," + std::to_string(box.whisker_high) + " to 1.05," +
             std::to_string(box.whisker_high) + " nohead lw 1.5 lc rgb '#1f1f1f'"};
     fig.axes(0).set(ax);
 
@@ -177,6 +252,11 @@ int main(int argc, char** argv) {
     ax.ylabel = "y";
     ax.grid = true;
     ax.legend = true;
+    ax.legend_spec.position = LegendPosition::TopLeft;
+    ax.legend_spec.boxed = true;
+    ax.legend_spec.opaque = true;
+    ax.legend_spec.has_font_pt = true;
+    ax.legend_spec.font_pt = 13.0;
     fig.axes(0).set(ax);
 
     std::normal_distribution<double> nx(0.0, 1.0);
@@ -188,12 +268,25 @@ int main(int argc, char** argv) {
       x[i] = vx;
       y[i] = 0.55 * vx + vy;
     }
-    fig.axes(0).add_series(SeriesSpec{.type = SeriesType::Scatter, .label = "samples"}, x, y);
+    fig.axes(0).add_series(SeriesSpec{.type = SeriesType::Scatter,
+                                      .label = "Samples",
+                                      .has_color = true,
+                                      .color = "#4d4d4d",
+                                      .has_opacity = true,
+                                      .opacity = 0.50},
+                           x,
+                           y);
 
     std::vector<double> ex, ey;
     confidence_ellipse(x, y, 2.0, ex, ey, 240);
     fig.axes(0).add_series(
-        SeriesSpec{.label = "2-sigma", .has_line_width = true, .line_width_pt = 2.3}, ex, ey);
+        SeriesSpec{.label = "2\\sigma ellipse",
+                   .has_line_width = true,
+                   .line_width_pt = 2.8,
+                   .has_color = true,
+                   .color = "#e45756"},
+        ex,
+        ey);
 
     if (render(fig, out_root / "confidence_ellipse" / "figures") != 0) return 1;
   }
@@ -203,11 +296,26 @@ int main(int argc, char** argv) {
     auto fs = make_spec("Autocorrelation");
     Figure fig(fs);
     AxesSpec ax;
-    ax.title = "Autocorrelation (lags 0..60)";
-    ax.xlabel = "lag";
-    ax.ylabel = "rho(lag)";
+    ax.title = "Autocorrelation (Lags 0..60)";
+    ax.xlabel = "Lag";
+    ax.ylabel = "\\rho(k)";
     ax.grid = true;
-    ax.legend = false;
+    ax.legend = true;
+    ax.legend_spec.position = LegendPosition::TopRight;
+    ax.legend_spec.boxed = true;
+    ax.legend_spec.opaque = true;
+    ax.legend_spec.has_font_pt = true;
+    ax.legend_spec.font_pt = 13.0;
+    ax.has_xlim = true;
+    ax.xmin = -0.5;
+    ax.xmax = 60.5;
+    ax.has_ylim = true;
+    ax.ymin = -0.2;
+    ax.ymax = 1.05;
+    ax.has_xtick_step = true;
+    ax.xtick_step = 10.0;
+    ax.has_ytick_step = true;
+    ax.ytick_step = 0.2;
     fig.axes(0).set(ax);
 
     std::vector<double> sig(800);
@@ -219,10 +327,33 @@ int main(int argc, char** argv) {
     const auto ac = autocorrelation(sig, 60);
     std::vector<double> lags(ac.size());
     for (std::size_t i = 0; i < lags.size(); ++i) lags[i] = static_cast<double>(i);
+    const double ci = 1.96 / std::sqrt(static_cast<double>(sig.size()));
+    std::vector<double> ci_pos(ac.size(), ci);
+    std::vector<double> ci_neg(ac.size(), -ci);
     fig.axes(0).add_histogram(
-        SeriesSpec{.label = "", .has_color = true, .color = "#5b8c5a", .has_opacity = true, .opacity = 0.85},
+        SeriesSpec{.label = "ACF",
+                   .has_color = true,
+                   .color = "#4c78a8",
+                   .has_opacity = true,
+                   .opacity = 0.42,
+                   .has_line_width = true,
+                   .line_width_pt = 1.4},
         lags,
         ac);
+    fig.axes(0).add_series(SeriesSpec{.label = "95% bounds",
+                                      .has_line_width = true,
+                                      .line_width_pt = 2.0,
+                                      .has_color = true,
+                                      .color = "#d95f02"},
+                           lags,
+                           ci_pos);
+    fig.axes(0).add_series(SeriesSpec{.label = "",
+                                      .has_line_width = true,
+                                      .line_width_pt = 2.0,
+                                      .has_color = true,
+                                      .color = "#d95f02"},
+                           lags,
+                           ci_neg);
 
     if (render(fig, out_root / "autocorrelation" / "figures") != 0) return 1;
   }
