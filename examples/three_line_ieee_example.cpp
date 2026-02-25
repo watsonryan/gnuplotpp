@@ -36,8 +36,8 @@ int main(int argc, char** argv) {
   ax.grid = true;
   ax.ylog = true;
   ax.gnuplot_commands = {
-      "set label 1 'e_p(t)=e_0 e^{-{/Symbol l} t}' at 18,4.0 font 'Times,8'",
-      "set arrow 1 from 34,3.6 to 58,1.9 lw 1.0 lc rgb '#000000'"};
+      "set label 1 'e_p(t)=e_0 e^{-{/Symbol l} t}' at 14,6.6 font 'Times,8' front",
+      "set arrow 1 from 18,6.1 to 40,2.857 lw 1.0 lc rgb '#000000' front"};
   fig.axes(0).set(ax);
 
   std::vector<double> t;
