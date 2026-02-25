@@ -62,6 +62,7 @@ ctest --preset test-debug
 
 - [Documentation Index](docs/README.md)
 - [Getting Started](docs/GETTING_STARTED.md)
+- [Best Practices Quick Reference](docs/BEST_PRACTICES.md)
 - [Styling and Presets](docs/STYLING_AND_PRESETS.md)
 - [Statistical Plot Guide](docs/STATISTICS_GUIDE.md)
 - [Examples Cookbook](docs/EXAMPLES.md)
