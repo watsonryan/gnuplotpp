@@ -94,10 +94,10 @@ std::string terminal_for(OutputFormat format, const FigureSpec& spec) {
       return os.str();
     case OutputFormat::Png:
       constexpr double kPngDpi = 600.0;
-      constexpr double kPtPerIn = 72.0;
-      const double px_per_pt = kPngDpi / kPtPerIn;
-      const double png_font_px = std::max(6.0, spec.style.font_pt * px_per_pt);
-      const double png_lw_px = std::max(1.0, lw * px_per_pt);
+      // pngcairo font/line scaling does not map 1:1 with pt at high raster DPI.
+      // Use tuned multipliers for readable README/publication previews.
+      const double png_font_px = std::max(10.0, spec.style.font_pt * 2.2);
+      const double png_lw_px = std::max(1.5, lw * 2.0);
       os << "set terminal pngcairo size " << (spec.size.w * kPngDpi) << ","
          << (spec.size.h * kPngDpi)
          << " enhanced background rgb 'white' font '" << spec.style.font << ","
