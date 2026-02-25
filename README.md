@@ -82,7 +82,7 @@ Generated from:
 ./build/dev-debug/three_line_ieee_example --out out/three_line_ieee_readme
 ```
 
-<img src="docs/images/three_line_ieee_example.svg" alt="Three-line IEEE example" width="900" />
+<img src="docs/images/three_line_ieee_example_v2.svg" alt="Three-line IEEE example" width="900" />
 
 Expected outputs:
 

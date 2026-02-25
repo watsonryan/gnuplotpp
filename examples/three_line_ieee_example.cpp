@@ -46,9 +46,9 @@ int main(int argc, char** argv) {
   for (int i = 0; i < 200; ++i) {
     const double x = static_cast<double>(i) * 0.5;
     t.push_back(x);
-    srif.push_back(14.0 / (1.0 + 0.12 * x));
-    ukf.push_back(10.8 / (1.0 + 0.075 * x));
-    ekf.push_back(8.9 / (1.0 + 0.045 * x));
+    srif.push_back(16.0 / (1.0 + 0.20 * x));
+    ukf.push_back(11.0 / (1.0 + 0.080 * x));
+    ekf.push_back(7.8 / (1.0 + 0.035 * x));
   }
 
   double y_max_data = 0.0;
