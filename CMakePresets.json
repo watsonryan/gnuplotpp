@@ -1,0 +1,75 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_CXX_STANDARD": "20",
+        "CMAKE_CXX_STANDARD_REQUIRED": "ON",
+        "CMAKE_CXX_EXTENSIONS": "OFF",
+        "BUILD_TESTING": "ON",
+        "BUILD_EXAMPLES": "ON",
+        "GNUPLOTPP_ENABLE_CPM": "OFF"
+      }
+    },
+    {
+      "name": "dev-debug",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "dev-release",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "dev-cpm",
+      "inherits": "dev-debug",
+      "cacheVariables": {
+        "GNUPLOTPP_ENABLE_CPM": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "build-debug",
+      "configurePreset": "dev-debug"
+    },
+    {
+      "name": "build-release",
+      "configurePreset": "dev-release"
+    },
+    {
+      "name": "build-cpm",
+      "configurePreset": "dev-cpm"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "test-debug",
+      "configurePreset": "dev-debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "test-release",
+      "configurePreset": "dev-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
+}

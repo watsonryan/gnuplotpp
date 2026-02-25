@@ -4,10 +4,13 @@ project(gnuplotpp VERSION 0.1.0 LANGUAGES CXX)
 option(ENABLE_PLOTTING "Enable gnuplot rendering support" ON)
 option(BUILD_TESTING "Build tests" ON)
 option(BUILD_EXAMPLES "Build examples" ON)
+option(GNUPLOTPP_ENABLE_CPM "Enable CPM-managed external dependencies" OFF)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+include(cmake/dependencies.cmake)
 
 add_library(gnuplotpp
   src/figure.cpp
@@ -25,9 +28,16 @@ target_include_directories(gnuplotpp
 
 target_compile_features(gnuplotpp PUBLIC cxx_std_20)
 
+if(TARGET nlohmann_json::nlohmann_json)
+  target_link_libraries(gnuplotpp PUBLIC nlohmann_json::nlohmann_json)
+endif()
+
 if(BUILD_EXAMPLES)
   add_executable(two_window_example examples/two_window_example.cpp)
   target_link_libraries(two_window_example PRIVATE gnuplotpp::gnuplotpp)
+
+  add_executable(layout_2x2_example examples/layout_2x2_example.cpp)
+  target_link_libraries(layout_2x2_example PRIVATE gnuplotpp::gnuplotpp)
 endif()
 
 if(BUILD_TESTING)
