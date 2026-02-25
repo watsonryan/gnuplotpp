@@ -25,6 +25,16 @@ std::string lower(std::string s) {
   return s;
 }
 
+std::string normalize_token(std::string s) {
+  s = lower(trim(std::move(s)));
+  for (char& c : s) {
+    if (c == '-' || c == ' ') {
+      c = '_';
+    }
+  }
+  return s;
+}
+
 bool parse_bool(const std::string& v) {
   const auto l = lower(trim(v));
   return l == "true" || l == "1" || l == "yes" || l == "on";
@@ -91,7 +101,7 @@ ColorNorm parse_color_norm(const std::string& s) {
 }
 
 StyleProfile parse_style_profile(const std::string& s) {
-  const auto l = lower(trim(s));
+  const auto l = normalize_token(s);
   if (l == "science") return StyleProfile::Science;
   if (l == "ieee_strict") return StyleProfile::IEEE_Strict;
   if (l == "aiaa_strict") return StyleProfile::AIAA_Strict;

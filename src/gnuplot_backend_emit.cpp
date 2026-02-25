@@ -455,14 +455,16 @@ void emit_plot_body(std::ostream& os,
   const auto& spec = fig.spec();
   const auto& all_axes = fig.all_axes();
   const bool ieee = is_ieee_preset(spec.preset);
+  const bool ieee_strict_typography =
+      ieee && spec.style.font == "Times" && spec.style.font_pt <= 9.0;
   const bool custom_color_or_opacity = has_custom_color_or_opacity(fig);
   const bool heatmap = has_heatmap(fig);
   const double tick_font_pt =
-      ieee ? 8.0 : spec.style.font_pt * std::max(0.1, spec.style.tick_font_scale);
+      ieee_strict_typography ? 8.0 : spec.style.font_pt * std::max(0.1, spec.style.tick_font_scale);
   const double label_font_pt =
-      ieee ? 8.5 : spec.style.font_pt * std::max(0.1, spec.style.label_font_scale);
+      ieee_strict_typography ? 8.5 : spec.style.font_pt * std::max(0.1, spec.style.label_font_scale);
   const double title_font_pt =
-      ieee ? 8.5 : spec.style.font_pt * std::max(0.1, spec.style.title_font_scale);
+      ieee_strict_typography ? 8.5 : spec.style.font_pt * std::max(0.1, spec.style.title_font_scale);
 
   os << "set border linewidth 0.9 linecolor rgb '#222222'\n";
   os << "set tics in nomirror scale 0.5,0.25\n";
@@ -560,8 +562,8 @@ void emit_plot_body(std::ostream& os,
       if (axis_spec.legend_spec.has_font_pt) {
         os << "set key font '" << esc(spec.style.font) << "," << axis_spec.legend_spec.font_pt
            << "'\n";
-      } else if (ieee) {
-        os << "set key font '" << esc(spec.style.font) << ",8.0'\n";
+      } else {
+        os << "set key font '" << esc(spec.style.font) << "," << axis_tick_font_pt << "'\n";
       }
     } else {
       os << "unset key\n";

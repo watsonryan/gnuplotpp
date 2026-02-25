@@ -9,17 +9,28 @@ axes:
     ylabel: "x(t)"
     grid: true
     legend: true
-    typography:
-      title_font_pt: 12
-      title_bold: true
     frame:
       border_mask: 3
       ticks_out: true
     series:
       - type: line
-        label: "signal"
-        line_width_pt: 1.8
+        label: "signal\\_a"
+        line_width_pt: 2.8
         csv:
           path: "minimal.csv"
           x: "t"
-          y: "signal"
+          y: "signal_a"
+      - type: line
+        label: "signal\\_c"
+        line_width_pt: 2.8
+        csv:
+          path: "minimal.csv"
+          x: "t"
+          y: "signal_c"
+      - type: line
+        label: "signal\\_e"
+        line_width_pt: 2.8
+        csv:
+          path: "minimal.csv"
+          x: "t"
+          y: "signal_e"

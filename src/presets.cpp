@@ -93,13 +93,13 @@ void apply_style_profile(FigureSpec& spec, StyleProfile profile) {
   switch (profile) {
     case StyleProfile::Science:
       spec.style.font = "Times";
-      spec.style.font_pt = 9.0;
+      spec.style.font_pt = 12.0;
       spec.style.line_width_pt = 1.5;
       spec.style.grid = true;
-      spec.style.tick_font_scale = 0.95;
-      spec.style.label_font_scale = 1.05;
-      spec.style.title_font_scale = 1.12;
-      spec.style.title_bold = false;
+      spec.style.tick_font_scale = 1.0;
+      spec.style.label_font_scale = 4.0 / 3.0;
+      spec.style.title_font_scale = 4.0 / 3.0;
+      spec.style.title_bold = true;
       spec.palette = ColorPalette::Tab10;
       break;
     case StyleProfile::IEEE_Strict:
