@@ -85,7 +85,7 @@ std::string terminal_for(OutputFormat format, const FigureSpec& spec) {
     case OutputFormat::Svg:
       os << "set terminal svg size " << (spec.size.w * 96.0) << "," << (spec.size.h * 96.0)
          << " enhanced font '" << spec.style.font << "," << spec.style.font_pt
-         << "' linewidth " << lw << " dynamic";
+         << "' linewidth " << lw << " dynamic background rgb 'white'";
       return os.str();
     case OutputFormat::Eps:
       os << "set terminal epscairo size " << spec.size.w << "in," << spec.size.h
